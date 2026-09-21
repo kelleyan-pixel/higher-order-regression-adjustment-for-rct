@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 Rscript r/correction_sim.R                          # 18 gamma = 0 designs of the paper (resumable)
-python -u simulations/correction_python.py example   # introductory example + heavy-tailed variant
-python -u simulations/correction_python.py prev      # previous-release designs (incl. large HTE)
-python simulations/correction_summarize.py          # writes results/correction_summary.{json,csv,md}
+python3 -u simulations/correction_python.py example   # introductory example + heavy-tailed variant
+python3 -u simulations/correction_python.py prev      # previous-release designs (incl. large HTE)
+python3 simulations/correction_summarize.py          # writes results/correction_summary.{json,csv,md}
 echo "notes: docs/correction_diagnostic.md; results: results/correction_summary.md, results/calibration.csv"

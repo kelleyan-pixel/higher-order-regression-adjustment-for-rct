@@ -124,6 +124,12 @@ def summarize(a, tau, G, n, meta):
                 "median_se_HC1": pct(se1, 0.5), "median_se_HC3": pct(se3, 0.5)}
     out["sampling"] = {"IREG": samp(a["I_est"], a["I_se1"], a["I_se3"]),
                        "REG": samp(a["R_est"], a["R_se1"], a["R_se3"])}
+    # Monte Carlo SE of the MSE ratio IREG/REG by the delta method on paired squared errors
+    ok = np.isfinite(a["I_est"]) & np.isfinite(a["R_est"])
+    eI, eR = (a["I_est"][ok] - tau) ** 2, (a["R_est"][ok] - tau) ** 2
+    ratio = eI.mean() / eR.mean()
+    out["sampling"]["mse_ratio"] = float(ratio)
+    out["sampling"]["mse_ratio_mcse"] = float(np.std(eI - ratio * eR, ddof=1) / (eR.mean() * np.sqrt(ok.sum())))
     out["median_width_95"] = {
         "IREG_HC1": pct(2 * a["I_q"] * a["I_se1"], 0.5), "IREG_HC3": pct(2 * a["I_q"] * a["I_se3"], 0.5),
         "REG_HC1": pct(2 * a["R_q"] * a["R_se1"], 0.5), "REG_HC3": pct(2 * a["R_q"] * a["R_se3"], 0.5)}

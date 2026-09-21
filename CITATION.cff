@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper it accompanies."
+title: "Replication package for: Higher-Order Asymptotics of Regression-Adjusted Estimators in Randomized Trials"
+version: 1.0.4
+license: MIT
+repository-code: "https://github.com/kelleyan-pixel/higher-order-regression-adjustment-for-rct"
+authors:
+  - family-names: Kelley
+    given-names: Anna
+    affiliation: Stanford University
+  - family-names: Wager
+    given-names: Stefan
+    affiliation: Stanford University

@@ -37,12 +37,16 @@ run_all.sh        reproduces everything, compiles the paper and builds the arXiv
 run_correction_study.sh            reruns only the correction diagnostic
 make_arxiv_bundle.sh               builds and test-compiles arxiv_upload.tar.gz
 VERIFICATION.md   what is verified, and how
+LICENSE, CITATION.cff   MIT license and citation metadata
 MANIFEST.txt, SHA256SUMS.txt   file list and checksums of this tree (check with: sha256sum -c SHA256SUMS.txt)
 ```
 
 ## Software
 
-- Python 3.12 with `requirements.txt` (numpy 2.4.4, scipy 1.17.1, sympy 1.14.0, statsmodels 0.15.0,
+- Python 3.12 with `requirements.txt`. On Ubuntu 24.04, install into a virtual environment:
+  `sudo apt-get install python3-venv`, then
+  `python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt`.
+  All scripts are invoked as `python3`. Requirements (numpy 2.4.4, scipy 1.17.1, sympy 1.14.0, statsmodels 0.15.0,
   matplotlib 3.10.8).
 - R 4.3.3 with `estimatr` 1.0.2 and `jsonlite` (on Ubuntu 24.04:
   `sudo apt-get install r-base-core r-cran-estimatr r-cran-jsonlite`). All main inference results use
@@ -72,9 +76,9 @@ on any LaTeX warning) and `make_arxiv_bundle.sh`. All seeds are fixed integers.
 To rebuild the paper from the stored results only (a few minutes):
 
 ```bash
-python simulations/correction_summarize.py
-python simulations/make_tables.py
-python simulations/check_prose_numbers.py
+python3 simulations/correction_summarize.py
+python3 simulations/make_tables.py
+python3 simulations/check_prose_numbers.py
 cd paper && pdflatex main && bibtex main && pdflatex main && pdflatex main && pdflatex main && cd ..
 bash make_arxiv_bundle.sh
 ```

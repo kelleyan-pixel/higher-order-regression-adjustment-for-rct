@@ -1,4 +1,4 @@
-"""Ablation check (paper Table A.3).
+"""Ablation check (paper Table 8).
 
 Given the control-variate estimates produced by run_validation.py, test the
 Monte-Carlo estimate of D_p against deliberately wrong versions of the

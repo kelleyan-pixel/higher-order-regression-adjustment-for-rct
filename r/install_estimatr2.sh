@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install estimatr 2.0.0 (GitHub, pinned commit) into a repository-local R library,
 # alongside whatever estimatr version is installed system-wide (1.0.2 in the
-# reference environment).  Used only for the rare-value comparison of Table 5.
+# reference environment).  Used only for the rare-value comparison of Table 6.
 # Requires: R with Rcpp, RcppEigen, Formula, generics, rlang; a C++ toolchain; network
 # access to codeload.github.com.
 set -euo pipefail

@@ -1,3 +1,19 @@
+"""Symbolic certificate for the Bernoulli-design constant D_Bern (Theorem 12 of the paper), symbolic p.
+
+Substitutes the derivative tensors of the REG and IREG coefficient maps and the moment blocks of the
+moment vector into the second-order expansion terms, reduces the indexed sums, and checks that the
+result equals the rows (dT1)-(dT3) of the paper with zero remainder. Before doing so it asserts that the
+hand-coded first derivatives agree with the generic formula D theta[h] = Omega (db - dA theta).
+
+Symbols in this file versus the paper:
+  code            paper
+  gamma           gamma (whitened heterogeneity direction)
+  K (in blocks)   Sigma^{-1}-type Gram inverse blocks (the paper's K = E[Z Z^T ||Z||^2] is the moment F/T_4 block)
+  Z (atom)        Xi_gamma = E[(gamma^T Z) ||Z||^2 omega eps]
+  M, N            the matrix calE = E[Z Z^T eps] and E[Z eps^2]
+  delta           omega = W - 1/2
+  T3, T4          third and fourth moment tensors T_3, T_4 of Z
+"""
 #!/usr/bin/env python3
 
 """Exact symbolic general-p Hall certificate for the Bernoulli REG/IREG proof.
@@ -127,7 +143,7 @@ def rewrite_delta_term(facs, coeff):
             if f.name!='Delta': continue
             a,b=f.inds
             if a==b:
-                facs.pop(pos); coeff*=1  # p handled below by explicit marker
+                facs.pop(pos); coeff*=1  # the factor p is tracked by an explicit marker
                 # represent dimension loop as Dim factor
                 facs.append(Factor('Dim',()))
                 changed=True; break
@@ -296,12 +312,6 @@ def canon_renaming(factors):
     ren={old:new for new,old in enumerate(order)}
     return tuple(sorted((Factor(f.name,tuple(ren[i] for i in f.inds)) for f in factors),key=lambda f:(f.name,f.inds)))
 
-def canonicalize(e:PExpr):
-    d=defaultdict(lambda:sp.Integer(0))
-    for fs,c in e.terms.items():
-        fs2=canon_renaming(fs)
-        d[fs2]+=c
-    return PExpr(d)
 
 def exact_zero(e:PExpr):
     e=canonicalize(reduce_pexpr(e))
@@ -382,66 +392,8 @@ def matmul(ireg, A, B, row, col, pool):
         if ea and eb: total += ea*eb
     return reduce_pexpr(total)
 
-def direction_dA(ireg, dtyp, labels):
-    # sparse entry function row,col -> PExpr.  labels are the feature labels
-    # carried by this coordinate direction.
-    def get(row,col,pool=None):
-        rt,ri=row; ct,ci=col
-        z=PExpr.zero()
-        if dtyp=='X':
-            i=labels[0]
-            if (rt,ct) in [('s','x') ,('x','s')] and (ri==i if rt=='x' else ci==i): return PExpr.one()
-            return z
-        if dtyp=='XX':
-            i,j=labels
-            if rt=='x' and ct=='x' and ((ri==i and ci==j) or (ri==j and ci==i)): return PExpr.one()
-            return z
-        if dtyp=='W':
-            if (rt,ri,ct,ci)==('s','0','s','0'): return PExpr.one()
-            if (rt,ri,ct,ci)==('s','0','s','w'): return PExpr.one()
-            if (rt,ri,ct,ci)==('s','w','s','0'): return PExpr.one()
-            if (rt,ri,ct,ci)==('s','w','s','w'): return PExpr.one()
-            return z
-        if dtyp=='WX':
-            i=labels[0]
-            # REG: X_i-W block. IREG: same plus W-WX_i and intercept-WX_i.
-            if (rt,ct)==('x','s') and ri==i and ci=='w': return PExpr.one()
-            if (rt,ct)==('s','x') and ri=='w' and ci==i: return PExpr.one()
-            if ireg:
-                if (rt,ct)==('s','wx') and ri=='0' and ci==i: return PExpr.one()
-                if (rt,ct)==('wx','s') and ri==i and ci=='0': return PExpr.one()
-                if (rt,ct)==('s','wx') and ri=='w' and ci==i: return PExpr.one()
-                if (rt,ct)==('wx','s') and ri==i and ci=='w': return PExpr.one()
-            return z
-        if dtyp=='X2W':
-            i,j=labels
-            if not ireg: return z
-            if rt=='x' and ct=='wx':
-                if (ri==i and ci==j) or (ri==j and ci==i): return PExpr.one()
-            if rt=='wx' and ct=='x':
-                if (ri==i and ci==j) or (ri==j and ci==i): return PExpr.one()
-            if rt=='wx' and ct=='wx' and ((ri==i and ci==j) or (ri==j and ci==i)): return PExpr.one()
-            return z
-        return z
-    return get
 
-def direction_db(ireg,dtyp,labels):
-    def get(cat,pool=None):
-        if dtyp=='Y' and cat==cat_scalar('0'): return PExpr.one()
-        if dtyp=='XY' and cat[0]=='x' and cat[1]==labels[0]: return PExpr.one()
-        if dtyp=='WY' and cat==cat_scalar('w'): return PExpr.one()
-        if ireg and dtyp=='XWY' and cat[0]=='wx' and cat[1]==labels[0]: return PExpr.one()
-        return PExpr.zero()
-    return get
 
-def theta0(ireg):
-    # Canonical equivalent representative Y = W gamma'X + eps.
-    # REG theta_X = gamma/2; IREG theta_WX = gamma.
-    def get(cat):
-        if cat[0]=='x': return PExpr.atom('gamma',cat[1]).scale(Fraction(1,2))
-        if ireg and cat[0]=='wx': return PExpr.atom('gamma',cat[1])
-        return PExpr.zero()
-    return get
 
 def vec_linear_form(Rmultfun, e):
     return Rmultfun(e)
@@ -472,18 +424,6 @@ def base_a(ireg,cat):
     # R e_W
     return {'0':PExpr.scalar(-2),'w':PExpr.scalar(4)}.get(cat[1] if cat[0]=='s' else '',PExpr.zero())
 
-def a_direction(ireg,dtyp,labels,pool):
-    # a = R e_W; extended IREG endpoint correction for X directions only.
-    dA=direction_dA(ireg,dtyp,labels); db=direction_db(ireg,dtyp,labels)
-    dt=dtheta(ireg,dtyp,labels,pool)
-    # R dterm, then e_W^T times it = component W of R dterm.
-    base=matvec_generic(ireg, lambda r,c,p: Rget(ireg,r,c), lambda c: db(c)-matvec_generic(ireg,dA,lambda m:theta0(ireg)(m),c,pool), cat_scalar('w'), pool)
-    # Above is e_W^T R (db-dA theta), but R symmetric; okay.
-    if ireg and dtyp=='X':
-        i=labels[0]
-        # dc_i * (e_aux_i^T theta0), where theta0 WX_i=gamma_i.
-        base += PExpr.atom('gamma',i)
-    return reduce_pexpr(base)
 
 def Delta(i,j):
     if i==j: return PExpr.scalar(1)
@@ -510,7 +450,7 @@ def direction_dA2(ireg,dtyp,labels):
         if dtyp=='W':
             if rt=='s' and ct=='s' and ((ri,ct,ci)==('0','s','0') or (ri,ct,ci)==('0','s','w') or (ri,ct,ci)==('w','s','0') or (ri,ct,ci)==('w','s','w')):
                 return PExpr.one()
-            # Above tuple test is awkward; explicit scalar block check below.
+            # scalar blocks are checked explicitly below
             if rt=='s' and ct=='s' and ((ri,ci) in [('0','0'),('0','w'),('w','0'),('w','w')]):
                 return PExpr.one()
             return z
@@ -549,7 +489,8 @@ def direction_db2(ireg,dtyp,labels):
 direction_db = direction_db2
 
 def theta0_expr(ireg,cat):
-    if cat[0]=='x': return PExpr.atom('gamma',cat[1]).scale(Fraction(1,2))
+    # theta_R = (0, gamma/2, 0) and theta_I = (0, 0, 0, gamma) in whitened coordinates (Appendix A).
+    if cat[0]=='x' and not ireg: return PExpr.atom('gamma',cat[1]).scale(Fraction(1,2))
     if ireg and cat[0]=='wx': return PExpr.atom('gamma',cat[1])
     return PExpr.zero()
 theta0 = lambda ireg: (lambda cat: theta0_expr(ireg,cat))
@@ -572,11 +513,6 @@ def matvec_any(ireg,A,vfun,row,pool):
 def vec_Rtimes(ireg,vfun,row,pool):
     return matvec_R(ireg,vfun,row,pool)
 
-def dtheta2(ireg,dtyp,labels,pool):
-    dA=direction_dA(ireg,dtyp,labels); db=direction_db(ireg,dtyp,labels); th=theta0(ireg)
-    def residual(mid):
-        return db(mid) - matvec_any(ireg,dA,lambda m:th(m),mid,pool)
-    return lambda cat: vec_Rtimes(ireg,residual,cat,pool)
 
 def avec(ireg):
     return lambda cat: Rget(ireg,cat,cat_scalar('w'))
@@ -616,7 +552,7 @@ def A3_one(ireg,directions,pool):
     # Remaining terms are a^T dA_i R(dA_j dt_k), with signs as in frozen formula.
     terms=[
       (+1,dA_ep,dA_de,dt_d),
-      (-1,None,None,None), # placeholder below matches exact 12-term list
+      (-1,None,None,None), 
     ]
     # Direct transcription of the frozen 12-term formula, each written as
     # a^T A1 R(A2 dt3) or -e_lin^T R(A2 dt3).
@@ -688,7 +624,7 @@ def spec_poly(kind, labels, gamma_cache=None, pool=None):
     if kind=='XWY': return mul(mul(X(labels[0]),W),Y)
     raise ValueError(kind)
 
-def expect_poly(poly):
+def _expect_poly_base(poly):
     # Reduce delta powers and map X^deg eps^e to primitive tensor atoms.
     out=PExpr.zero()
     for (d,e,xs),coeff in poly.items():
@@ -862,16 +798,6 @@ def cum3_cached(cacher,t1,L1,t2,L2,t3,L3,pool):
     e12=m2_cached(cacher,t1,L1,t2,L2,pool); e13=m2_cached(cacher,t1,L1,t3,L3,pool); e23=m2_cached(cacher,t2,L2,t3,L3,pool)
     return reduce_pexpr(e123-e1*e23-e2*e13-e3*e12+2*e1*e2*e3)
 
-def coord_branches(typ,pool):
-    """One coordinate occurrence as exact sum over its feature index/indices.
-    For symmetric pair coordinates, return the 1/2 ordered sum branch and the
-    1/2 diagonal branch."""
-    ar=ARITY[typ]
-    if ar==0: return [(typ,(),sp.Rational(1))]
-    if typ in SYMPAIR:
-        i=pool.fresh(); j=pool.fresh()
-        return [(typ,(i,j),sp.Rational(1,2)), (typ,(i,i),sp.Rational(1,2))]
-    return [(typ,(pool.fresh(),),sp.Rational(1))]
 
 def coord_combinations(types,pool):
     # Cartesian product, preserving exact symmetric-pair decomposition.
@@ -1000,62 +926,8 @@ def target_general_p():
 # multiplying the displayed block inverse R by each sparse dA/db entry, with no
 # coordinate instantiation.  They are used only as an optimization of the same
 # indexed matrix algebra; the sparse dA objects above remain the source of truth.
-def direct_dt(ireg,dtyp,labels):
-    def v(cat):
-        t,i=cat
-        z=PExpr.zero()
-        if not ireg:
-            if dtyp=='X':
-                return PExpr.zero()  # feature components zero; scalar handled below
-            if dtyp=='XX':
-                if t=='x': return (PExpr.atom('K',i,labels[0]).scale(-sp.Rational(1,2))*PExpr.atom('gamma',labels[1])
-                                      +PExpr.atom('K',i,labels[1]).scale(-sp.Rational(1,2))*PExpr.atom('gamma',labels[0]))
-                return PExpr.zero()
-            if dtyp=='WX':
-                return PExpr.zero()
-            if dtyp=='XY' and t=='x': return PExpr.atom('K',i,labels[0])
-            return PExpr.zero()
-        else:
-            if dtyp=='X' or dtyp=='XX': return z
-            if dtyp=='X2W' and t=='wx':
-                return PExpr.atom('K',i,labels[0]).scale(-2)*PExpr.atom('gamma',labels[1]) + PExpr.atom('K',i,labels[1]).scale(-2)*PExpr.atom('gamma',labels[0])
-            if dtyp=='XY' and t=='x': return PExpr.atom('K',i,labels[0]).scale(2)
-            if dtyp=='XWY' and t=='x': return PExpr.atom('K',i,labels[0]).scale(-2)
-            if dtyp=='XWY' and t=='wx': return PExpr.atom('K',i,labels[0]).scale(4)
-            return z
-    # Scalar components are returned below by a wrapper.
-    def out(cat):
-        t,i=cat
-        if not ireg:
-            if dtyp=='X':
-                if t=='s' and i=='0': return PExpr.atom('gamma',labels[0]).scale(-1)
-                if t=='s' and i=='w': return PExpr.atom('gamma',labels[0])
-            if dtyp=='WX':
-                if t=='s' and i=='0': return PExpr.atom('gamma',labels[0])
-                if t=='s' and i=='w': return PExpr.atom('gamma',labels[0]).scale(-2)
-            if dtyp=='Y':
-                if t=='s' and i=='0': return PExpr.scalar(2)
-                if t=='s' and i=='w': return PExpr.scalar(-2)
-            if dtyp=='WY':
-                if t=='s' and i=='0': return PExpr.scalar(-2)
-                if t=='s' and i=='w': return PExpr.scalar(4)
-            return v(cat)
-        else:
-            if dtyp=='WX':
-                if t=='s' and i=='0': return PExpr.atom('gamma',labels[0]).scale(2) * PExpr.scalar(0)  # overwritten below
-                if t=='s' and i=='w': return PExpr.atom('gamma',labels[0]).scale(-2)
-                # scalar intercept is zero
-            if dtyp=='Y':
-                if t=='s' and i=='0': return PExpr.scalar(2)
-                if t=='s' and i=='w': return PExpr.scalar(-2)
-            if dtyp=='WY':
-                if t=='s' and i=='0': return PExpr.scalar(-2)
-                if t=='s' and i=='w': return PExpr.scalar(4)
-            return v(cat)
-    # Correct IREG WX scalar components: theta0=0, thetaW=-2 gamma.
-    return out
 
-# Correct typo-friendly wrapper; defining this separately keeps all formulas explicit.
+# Wrapper that keeps the per-block formulas explicit.
 def dtheta2(ireg,dtyp,labels,pool):
     direct=direct_dt(ireg,dtyp,labels)
     return direct
@@ -1121,16 +993,6 @@ def cum3_fast(cacher,t1,L1,t2,L2,t3,L3,pool):
 # are retained, while index nodes themselves are unlabeled.  This is an
 # implementation detail for alpha-renaming, not a mathematical contraction
 # classification or an assumption about which tensors may occur.
-def _term_graph(factors):
-    import networkx as nx
-    G=nx.Graph()
-    for fi,f in enumerate(factors):
-        fn=f'F{fi}'; G.add_node(fn,bip='F',name=f.name)
-        for s,i in enumerate(f.inds):
-            inn=f'I{i}'
-            if inn not in G: G.add_node(inn,bip='I',name='I')
-            G.add_edge(fn,inn,slot=s)
-    return G
 
 def _wl_key(factors):
     import networkx as nx
@@ -1168,7 +1030,7 @@ def canonicalize(e:PExpr):
     return PExpr(d)
 
 # Patch expectation zero for centered X first moments.
-_old_expect_poly = expect_poly
+_old_expect_poly = _expect_poly_base
 def expect_poly(poly):
     out=PExpr.zero()
     for (d,e,xs),coeff in poly.items():
@@ -1237,44 +1099,6 @@ def direct_dt(ireg,dtyp,labels):
         return PExpr.zero()
     return out
 
-def direction_dA(ireg,dtyp,labels):
-    def get(row,col,pool=None):
-        rt,ri=row; ct,ci=col
-        z=PExpr.zero()
-        if dtyp=='X':
-            i=labels[0]
-            if rt=='s' and ri=='0' and ct=='x': return Delta(ci,i)
-            if rt=='x' and ct=='s' and ci=='0': return Delta(ri,i)
-            return z
-        if dtyp=='XX':
-            i,j=labels
-            if rt=='x' and ct=='x': return Delta(ri,i)*Delta(ci,j)+Delta(ri,j)*Delta(ci,i)
-            return z
-        if dtyp=='W':
-            if rt=='s' and ri=='0' and ct=='s' and ci=='w': return PExpr.one()
-            if rt=='s' and ri=='w' and ct=='s' and ci=='0': return PExpr.one()
-            if rt=='s' and ri=='w' and ct=='s' and ci=='w': return PExpr.one()
-            return z
-        if dtyp=='WX':
-            i=labels[0]
-            if rt=='x' and ct=='s' and ci=='w': return Delta(ri,i)
-            if rt=='s' and ri=='w' and ct=='x': return Delta(ci,i)
-            if ireg:
-                if rt=='s' and ri=='0' and ct=='wx': return Delta(ci,i)
-                if rt=='wx' and ct=='s' and ci=='0': return Delta(ri,i)
-                if rt=='s' and ri=='w' and ct=='wx': return Delta(ci,i)
-                if rt=='wx' and ct=='s' and ci=='w': return Delta(ri,i)
-            return z
-        if dtyp=='X2W':
-            if not ireg: return z
-            i,j=labels
-            s=Delta(ri,i)*Delta(ci,j)+Delta(ri,j)*Delta(ci,i)
-            if rt=='x' and ct=='wx': return s
-            if rt=='wx' and ct=='x': return s
-            if rt=='wx' and ct=='wx': return s
-            return z
-        return z
-    return get
 # Guarded replacement for the X2W block (the previous version attempted Delta on scalar labels).
 def direction_dA(ireg,dtyp,labels):
     def get(row,col,pool=None):
@@ -1490,4 +1314,23 @@ def run():
     print('PASS',json.dumps(results,indent=2))
     return results
 
-if __name__=='__main__': run()
+def crosscheck_first_derivatives():
+    """Assert that the hand-coded per-direction first derivatives of the coefficient map (direct_dt)
+    equal the generic formula D theta[h] = Omega (db - dA theta) (dtheta), for REG and IREG, every
+    coordinate type and every coefficient block."""
+    n = 0
+    for ireg in (False, True):
+        for dtyp in (COORD_TYPES_I if ireg else COORD_TYPES_R):
+            pool = IndexPool(); labels = pool.many(ARITY[dtyp])
+            gen, hand = dtheta(ireg, dtyp, labels, pool), direct_dt(ireg, dtyp, labels)
+            cats = [cat_scalar('0'), cat_scalar('w'), cat_X(pool.fresh())] + ([cat_WX(pool.fresh())] if ireg else [])
+            for cat in cats:
+                assert exact_zero(canonicalize(reduce_pexpr(gen(cat) - hand(cat)))), (ireg, dtyp, cat)
+                n += 1
+    print(f"first-derivative cross-check: {n} components agree")
+    return n
+
+
+if __name__=='__main__':
+    crosscheck_first_derivatives()
+    run()

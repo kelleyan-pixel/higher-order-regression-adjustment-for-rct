@@ -1,24 +1,26 @@
-# Files in this release (152 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
+# Files in this release (154 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
        135  .gitignore
-      6578  README.md
-      3348  VERIFICATION.md
+       510  CITATION.cff
+      1085  LICENSE
+      6876  README.md
+      3820  VERIFICATION.md
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
      21322  paper/figures/calibration.pdf
-    529630  paper/main.pdf
-    105716  paper/main.tex
-      9324  paper/references.bib
+    556881  paper/main.pdf
+    116118  paper/main.tex
+     10797  paper/references.bib
        672  paper/tables/ablation_body.tex
-      1090  paper/tables/calibration_body.tex
+      1249  paper/tables/calibration_body.tex
        196  paper/tables/correction95_body.tex
       1075  paper/tables/gamma0_other_body.tex
        646  paper/tables/gamma0_rare_body.tex
        391  paper/tables/gamma0_skew_body.tex
-     65636  paper/tables/gamma0_values.tex
+     70680  paper/tables/gamma0_values.tex
        441  paper/tables/gamma0_width_body.tex
-       424  paper/tables/sampling_body.tex
-       550  paper/tables/scale_body.tex
-       224  paper/tables/tail_body.tex
+       528  paper/tables/sampling_body.tex
+       831  paper/tables/scale_body.tex
+       239  paper/tables/tail_body.tex
        668  paper/tables/validation_body.tex
        444  paper/tables/validity_body.tex
       2962  r/common.R
@@ -32,48 +34,48 @@
        171  requirements.txt
       2396  results/ablation.json
       1824  results/bias.json
-      4674  results/calibration.csv
-     10003  results/correction/py_gauss_iid_n1000_p10.json
-      9020  results/correction/py_gauss_iid_n1000_p2.json
-      9221  results/correction/py_gauss_iid_n1000_p5.json
-      9287  results/correction/py_gauss_iid_n500_p5.json
-      9281  results/correction/py_gauss_indep_arms_n500_p5.json
-      9723  results/correction/py_heavy_het_n500_p5.json
-      8990  results/correction/py_heavy_tail_example.json
-      9031  results/correction/py_intro_example.json
-     10198  results/correction/py_large_hte_n1000_p10.json
-      8956  results/correction/py_large_hte_n1000_p2.json
-      9185  results/correction/py_large_hte_n1000_p5.json
-      9256  results/correction/py_large_hte_n500_p5.json
-      9974  results/correction/py_misspec_n1000_p10.json
-      8749  results/correction/py_misspec_n1000_p2.json
-      8982  results/correction/py_misspec_n1000_p5.json
-      9361  results/correction/py_null_hte_n500_p5.json
-      9257  results/correction/py_rare_extreme_n500_p5.json
-     11646  results/correction/py_skew_het_n1000_p10.json
-      9095  results/correction/py_skew_het_n1000_p2.json
-      9655  results/correction/py_skew_het_n1000_p5.json
-      9686  results/correction/py_skew_het_n500_p5.json
-      8631  results/correction/rsum_gauss_quad.json
-      8657  results/correction/rsum_lognormal_s0.6_prop.json
-      8680  results/correction/rsum_lognormal_s0.8_prop.json
-      8633  results/correction/rsum_lognormal_s1.0_log.json
-      8649  results/correction/rsum_lognormal_s1.0_log_prop.json
-      8636  results/correction/rsum_lognormal_s1.0_prop.json
-      8672  results/correction/rsum_lognormal_s1.0_prop_p5_n200.json
-      8702  results/correction/rsum_lognormal_s1.0_prop_p5_n500.json
-      8652  results/correction/rsum_lognormal_s1.0_quadstd.json
-      8632  results/correction/rsum_lognormal_s1.2_prop.json
-      8652  results/correction/rsum_lognormal_s1.2_prop_n200.json
-      8613  results/correction/rsum_lognormal_s1.2_prop_n2000.json
-      8655  results/correction/rsum_lognormal_s1.2_prop_n8000.json
-      8613  results/correction/rsum_lognormal_s1.5_prop.json
-      8635  results/correction/rsum_lognormal_s1.8_prop.json
-      8628  results/correction/rsum_lognormal_s2.0_prop.json
-      8686  results/correction/rsum_rare_q0.02_homo.json
-      8709  results/correction/rsum_rare_q0.02_prop.json
+      5574  results/calibration.csv
+     10082  results/correction/py_gauss_iid_n1000_p10.json
+      9098  results/correction/py_gauss_iid_n1000_p2.json
+      9299  results/correction/py_gauss_iid_n1000_p5.json
+      9365  results/correction/py_gauss_iid_n500_p5.json
+      9359  results/correction/py_gauss_indep_arms_n500_p5.json
+      9799  results/correction/py_heavy_het_n500_p5.json
+      9066  results/correction/py_heavy_tail_example.json
+      9109  results/correction/py_intro_example.json
+     10276  results/correction/py_large_hte_n1000_p10.json
+      9034  results/correction/py_large_hte_n1000_p2.json
+      9263  results/correction/py_large_hte_n1000_p5.json
+      9334  results/correction/py_large_hte_n500_p5.json
+     10053  results/correction/py_misspec_n1000_p10.json
+      8826  results/correction/py_misspec_n1000_p2.json
+      9060  results/correction/py_misspec_n1000_p5.json
+      9439  results/correction/py_null_hte_n500_p5.json
+      9334  results/correction/py_rare_extreme_n500_p5.json
+     11723  results/correction/py_skew_het_n1000_p10.json
+      9172  results/correction/py_skew_het_n1000_p2.json
+      9732  results/correction/py_skew_het_n1000_p5.json
+      9762  results/correction/py_skew_het_n500_p5.json
+      8709  results/correction/rsum_gauss_quad.json
+      8736  results/correction/rsum_lognormal_s0.6_prop.json
+      8758  results/correction/rsum_lognormal_s0.8_prop.json
+      8711  results/correction/rsum_lognormal_s1.0_log.json
+      8727  results/correction/rsum_lognormal_s1.0_log_prop.json
+      8714  results/correction/rsum_lognormal_s1.0_prop.json
+      8749  results/correction/rsum_lognormal_s1.0_prop_p5_n200.json
+      8779  results/correction/rsum_lognormal_s1.0_prop_p5_n500.json
+      8727  results/correction/rsum_lognormal_s1.0_quadstd.json
+      8710  results/correction/rsum_lognormal_s1.2_prop.json
+      8729  results/correction/rsum_lognormal_s1.2_prop_n200.json
+      8691  results/correction/rsum_lognormal_s1.2_prop_n2000.json
+      8733  results/correction/rsum_lognormal_s1.2_prop_n8000.json
+      8689  results/correction/rsum_lognormal_s1.5_prop.json
+      8709  results/correction/rsum_lognormal_s1.8_prop.json
+      8704  results/correction/rsum_lognormal_s2.0_prop.json
+      8768  results/correction/rsum_rare_q0.02_homo.json
+      8790  results/correction/rsum_rare_q0.02_prop.json
      16850  results/correction_summary.csv
-    407833  results/correction_summary.json
+    411016  results/correction_summary.json
       9900  results/correction_summary.md
        681  results/crosscheck.json
       1122  results/crt_correction.json
@@ -130,11 +132,11 @@
        840  results/r_validation.json
       1786  results/r_validation_estimatr2.json
       3119  results/validation.json
-      3156  run_all.sh
-       948  run_correction_study.sh
+      3171  run_all.sh
+       951  run_correction_study.sh
       1168  simulations/check_determinism.py
-     13407  simulations/check_prose_numbers.py
-      7654  simulations/correction_common.py
+     15814  simulations/check_prose_numbers.py
+      8070  simulations/correction_common.py
      12565  simulations/correction_python.py
       9936  simulations/correction_summarize.py
       3216  simulations/crosscheck_r.py
@@ -143,11 +145,11 @@
        756  simulations/env_report.py
       3263  simulations/formula.py
       1448  simulations/hc.py
-     21576  simulations/make_tables.py
-      2018  simulations/run_ablation.py
+     23362  simulations/make_tables.py
+      2016  simulations/run_ablation.py
       2732  simulations/run_bias.py
-      7723  simulations/run_example.py
-      2474  simulations/run_validation.py
+      7721  simulations/run_example.py
+      2470  simulations/run_validation.py
       3564  simulations/sim.py
-      4638  verification/crt_correction_certificate.py
-     67568  verification/general_p_symbolic_certificate.py
+      4640  verification/crt_correction_certificate.py
+     60490  verification/general_p_symbolic_certificate.py

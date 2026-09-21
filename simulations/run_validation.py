@@ -1,8 +1,8 @@
-"""Control-variate verification of Theorem 2 (paper Table A.1).
+"""Control-variate verification of Theorem 2 (paper Table 7).
 
 For each DGP in dgps.py the target D_p is computed exactly (formula.py) and
 compared with the control-variate Monte-Carlo estimator described in
-Appendix A.2 of the paper:
+Appendix B of the paper:
 
     Dhat_p = mean[ n^2 (e_IREG^2 - e_REG^2) - 2 n^2 d1 L ] + 2 n^2 E[d1 L],
 

@@ -89,6 +89,9 @@ def main():
         "by up to thirty standard errors": lambda v: 28 <= float(v) <= 32,
         "3.9\\times10^4": lambda v: v == "3.9",
     }
+    rho_, m_ = 0.02, 250
+    q0_, q1_ = (1 - rho_) ** m_, m_ * rho_ * (1 - rho_) ** (m_ - 1)
+    lev_th, rd_th = q1_ * (2 * (1 - q0_) - q1_), 1 - (1 - q0_) ** 2
     # statements in Appendix E about the calibration diagnostic (results/correction_summary.json)
     C = R("correction_summary.json")["designs"]
     lev = ["0.80", "0.90", "0.95", "0.98", "0.99"]
@@ -123,8 +126,10 @@ def main():
          "the lengthening is nearly uniform"),
         (all(W(d)["median_width_ratio_uncorrected_misses"] > 1.3 and W(d)["median_width_ratio_uncorrected_covers"] < 1.1
              for d in (hte, g0)), "the lengthening is concentrated where HC1 fails"),
-        (max(sweep[k]["Delta"] for k in ("0.6", "0.8", "1.0")) <= 50 and ip["Delta"] <= 50,
-         "In our moderately skewed designs the deficiency amounts to at most a few dozen observations"),
+        (all(v["Delta"] > 0 for v in sweep.values()) and sweep["1.2"]["Delta"] > 100,
+         "ranges from a few observations to more than a hundred in our scalar designs with skewed covariates"),
+        (abs(sweep["1.0"]["8000"]["predicted"] - sweep["1.0"]["8000"]["sim"]) < abs(sweep["1.0"]["500"]["predicted"] - sweep["1.0"]["500"]["sim"]),
+         "but the agreement improves with $n$"),
         (len(favors_reg) >= 2, "in several of our skewed, heteroskedastic designs it favors REG"),
         (C[big]["truth"]["R2_tau"] > 0.5 and (C[big]["p"] + 1) * C[big]["truth"]["R2_tau"] < 10,
          "a real but modest second-order gain"),
@@ -155,7 +160,27 @@ def main():
          "the prediction exceeds the simulated ratio by a growing margin"),
         (all(v[n]["sim"] > 1 and v[n]["predicted"] > 1 for v in sweep.values() for n in ("500", "2000", "8000"))
          and hr["500"]["sim"] > 1 and hr["500"]["predicted"] > 1,
-         "the simulated comparison has the sign the second-order analysis predicts"),
+         "The sign of the comparison agrees with the expansion in every design where we compare the two"),
+        (all((v["formula"] > 0) == (v["est"]["3200"]["cv"] > 0) for v in va.values())
+         and all((population_(s_, 1.0, 0.0)["Delta"] > 0) == (C[f"lognormal_s{s_:.1f}_prop"]["sampling"]["IREG"]["mse"] > C[f"lognormal_s{s_:.1f}_prop"]["sampling"]["REG"]["mse"])
+                 for s_ in (0.6, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0)),
+         "and the heavy-tailed example), so the decomposition"),
+        # leading-variance comparison, Table 7 convergence, Table 6 exact probabilities
+        (abs(C["lognormal_s0.6_prop"]["sampling"]["REG"]["sd"] / (population_(0.6, 1.0, 0.0)["V"] / 500) ** 0.5 - 1) < 0.02
+         and C["lognormal_s2.0_prop"]["sampling"]["REG"]["sd"] < 0.6 * (population_(2.0, 1.0, 0.0)["V"] / 500) ** 0.5,
+         "matches $\\sqrt{V^*/n}$ at $s=0.6$"),
+        (abs(full["est"]["3200"]["cv"] - (full["formula"] - 4 * full["G"])) < full["est"]["3200"]["se_cv"],
+         "lies within one standard error of the estimate at $n=3{,}200$"),
+        (abs((lambda e2, e8, e32: e32 + (e32 - e8) * ((e32 - e8) / (e8 - e2)) / (1 - (e32 - e8) / (e8 - e2)))(
+             full["est"]["200"]["cv"], full["est"]["800"]["cv"], full["est"]["3200"]["cv"]) - full["formula"]) < 1.0,
+         "which extrapolates to about"),
+        (C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] < 0.80 and C[g0]["calibration"]["0.99"]["REG_HC1"]["coverage"] > 0.99
+         and C[g0]["studentized"]["REG_HC1"]["levels"]["0.80"]["quantile_ratio"] > 1 > C[g0]["studentized"]["REG_HC1"]["levels"]["0.99"]["quantile_ratio"]
+         and abs(C[g0]["calibration"]["0.80"]["IREG_HC3"]["coverage"] - 0.80) < abs(C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] - 0.80),
+         "REG+HC1 shows a milder form of the same crossing pattern"),
+        (all(abs(v["frac_leverage_one_IREG"] - lev_th) < 3 * (lev_th * (1 - lev_th) / v["reps"]) ** 0.5
+             and abs(v["frac_rank_deficient_IREG"] - rd_th) < 3 * (rd_th * (1 - rd_th) / v["reps"]) ** 0.5
+             for v in R("r_gamma0_rare.json").values()), "the exact probabilities are"),
         # Section 3.3 connection and Appendix C tail sensitivity
         (all(abs(1 + population_(s_, 1.0, 0.0)["Delta"] / 500 - C[f"lognormal_s{s_:.1f}_prop"]["sampling"]["IREG"]["mse"] / C[f"lognormal_s{s_:.1f}_prop"]["sampling"]["REG"]["mse"]) < 0.015
              for s_ in (0.6, 0.8)), "they agree closely for $s\\le0.8$"),
@@ -163,9 +188,10 @@ def main():
              and population_(s_, 1.0, 0.0)["Delta"] > 0 for s_ in (0.6, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0)), "the simulated ratio exceeds one in every design, as predicted"),
         (all(10 <= population_(sx, c_, g)["Delta"] / population_(sx, c_, g, 1 - 1e-4)["Delta"] <= 1000
              for sx, c_, g in ((1.8, 1.5, 0.3), (1.5, 1.0, 0.4), (2.0, 1.0, 0.0))), "by one to three orders of magnitude"),
-        (all(0.5 <= (1 + population_(sx, c_, g, 1 - 1e-4)["Delta"] / 500) / sim <= 2 for sx, c_, g, sim in
+        (all(1 + population_(sx, c_, g, 1 - 1e-8)["Delta"] / 500 >= 3 * sim for sx, c_, g, sim in
              ((1.8, 1.5, 0.3, hr["500"]["sim"]), (1.5, 1.0, 0.4, ex["sweep"]["1.5"]["500"]["sim"]),
-              (2.0, 1.0, 0.0, C[g0]["sampling"]["IREG"]["mse"] / C[g0]["sampling"]["REG"]["mse"]))), "to the same order of magnitude as the simulated ratio"),
+              (2.0, 1.0, 0.0, C[g0]["sampling"]["IREG"]["mse"] / C[g0]["sampling"]["REG"]["mse"]))),
+         "gives predictions several times the simulated ratio"),
     ]:
         checks.append(("ok" if ok else "FAILED", text))
         expected[text] = lambda v: v == "ok"
