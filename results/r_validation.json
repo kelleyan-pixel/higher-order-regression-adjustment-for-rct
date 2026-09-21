@@ -1,0 +1,30 @@
+{
+  "estimatr_version": "1.0.2",
+  "R_version": "R version 4.3.3 (2024-02-29)",
+  "formula_vs_engine_max_rel_gap": 0,
+  "hand_vs_estimatr_max_rel_gap": 2.79776202205539e-14,
+  "datasets_checked": 100,
+  "gamma0": {
+    "population_G": 0,
+    "max_abs_ite_minus_tau": 1.77635683940025e-15,
+    "sate_minus_pate": 0,
+    "plugin_deltaSigmadelta_over_n": 0.00758680590307464
+  },
+  "p1_closed_form_max_rel_gap": 8.68388366103401e-16,
+  "leverage_one": {
+    "unit": 444,
+    "leverage": 1,
+    "one_minus_leverage": 1.11022302462516e-16,
+    "residual": -1.4210854715202e-14,
+    "estimatr_se": {
+      "HC1": 0.126780447067226,
+      "HC2": 0.12895568523226,
+      "HC3": 0.195299183742556
+    },
+    "se_with_unit_contribution_zeroed": {
+      "HC2": 0.12895568523226,
+      "HC3": 0.131930933334485
+    },
+    "estimatr_warnings": []
+  }
+}

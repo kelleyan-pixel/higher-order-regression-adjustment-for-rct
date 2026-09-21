@@ -1,0 +1,14 @@
+{
+ "datasets": 20,
+ "datasets_with_leverage_one": 0,
+ "max_rel_gap": {
+  "est": 2.6423307986078726e-14,
+  "se": 4.718447854656915e-15,
+  "df": 0.0,
+  "ci": 3.5638159090467525e-14,
+  "leverage": 1.5543122344752192e-15,
+  "statsmodels_se": 2.7755575615628914e-15
+ },
+ "tolerance": 1e-08,
+ "passed": true
+}

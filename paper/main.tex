@@ -1,0 +1,1013 @@
+\pdfoutput=1
+\documentclass{article}
+
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[margin=1.4in]{geometry}
+\hypersetup{colorlinks,citecolor=blue,urlcolor=blue,linkcolor=blue,
+  pdftitle={Higher-Order Asymptotics of Regression-Adjusted Estimators in Randomized Trials},
+  pdfauthor={Anna Kelley and Stefan Wager}}
+\setlength{\emergencystretch}{3em}
+
+%%%%%%%%% Macros (self-contained: this file compiles without any local .sty)
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\nn}{\mathcal{N}}
+\newcommand{\EEE}{\mathbb{E}}
+\newcommand{\EE}[1]{\mathbb{E}\left[#1\right]}
+\newcommand{\Var}[1]{\operatorname{Var}\left[#1\right]}
+\newcommand{\PP}[1]{\mathbb{P}\left[#1\right]}
+\newcommand{\p}[1]{\left(#1\right)}
+\newcommand{\cb}[1]{\left\{#1\right\}}
+\newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\cond}{\;\middle|\;}
+\newcommand{\htau}{\hat{\tau}}
+\newcommand{\hdelta}{\hat{\delta}}
+\newcommand{\hbeta}{\hat{\beta}}
+\DeclareMathOperator*{\argmin}{argmin}
+\newcommand{\limn}{\lim_{n\to\infty}}
+\DeclareMathOperator{\MSE}{MSE}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\Cov}{Cov}
+\newcommand{\Bern}{\mathrm{Bern}}
+\newcommand{\CRT}{\mathrm{CRT}}
+\newcommand{\IREG}{\mathrm{IREG}}
+\newcommand{\REG}{\mathrm{REG}}
+\newcommand{\SATE}{\mathrm{SATE}}
+\newcommand{\MSEexp}{\MSE^{\mathrm{exp}}}
+% numbers quoted in the prose of Section 3 and Appendix D are generated from results/*.json
+\input{tables/gamma0_values.tex}
+\newcommand{\gz}[1]{\ifcsname gz:#1\endcsname\csname gz:#1\endcsname\else\errmessage{Missing generated value #1}\fi}
+% expandable input for generated table bodies (plain \input is not expandable inside tabular)
+\makeatletter\newcommand{\tablebody}[1]{\@@input #1 }\makeatother
+
+%%%%%%%%% Theorems
+\theoremstyle{plain}
+\newtheorem{prop}{Proposition}
+\newtheorem{conj}[prop]{Conjecture}
+\newtheorem{coro}[prop]{Corollary}
+\newtheorem{lemm}[prop]{Lemma}
+\newtheorem{theo}[prop]{Theorem}
+
+\theoremstyle{definition}
+\newtheorem{assu}{Assumption}
+\newtheorem{exam}{Example}
+\newtheorem{defi}[exam]{Definition}
+
+\theoremstyle{remark}
+\newtheorem{rema}[prop]{Remark}
+
+\author{Anna Kelley\thanks{Stanford University.} \and Stefan Wager\thanks{Stanford University.}}
+\date{September 2026}
+\title{Higher-Order Asymptotics of \\ Regression-Adjusted Estimators in Randomized Trials\thanks{Code, simulation scripts and the computational certificates used in the proofs: \url{https://github.com/kelleyan-pixel/higher-order-regression-adjustment-for-rct}.}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Regression adjustment is widely used to estimate average treatment effects in randomized trials. Simple regression (REG, ANCOVA) and interacted regression (IREG, ANCOVA II) have the same first-order variance under balanced assignment, so first-order theory cannot choose between them. In a fixed-dimensional superpopulation framework we derive a closed form for the difference in the $1/n^2$ terms of their mean-squared-error expansions under complete randomization. It depends on covariate shape, treatment-effect heterogeneity, residual heteroskedasticity and nonlinear misspecification, and can favor either estimator; the resulting asymptotic deficiency is a few dozen observations or fewer in our moderately skewed designs and is largest under extreme skewness, where the finite-sample gaps are large but the expansion no longer predicts their magnitude. As a practical companion, we show by simulation that without treatment-effect heterogeneity, interacted regression with HC1 standard errors can undercover substantially under skewed, heteroskedastic designs, in a pattern consistent with high within-arm leverage, while simple regression does not in our designs; HC3 largely corrects the variance scale but not the most extreme leverage configurations. We also note that the conventional robust variance of the centered interacted implementation omits a superpopulation variance component, and show that its plug-in correction is accurate when heterogeneity is large but miscalibrated when heterogeneity is small.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Randomized controlled trials (RCTs) are fundamental to how causal effects are ascertained across a number of fields. One valuable attribute of RCTs is that they enable unbiased estimation of average treatment effects using simple methods such as the difference in means, without reliance on parametric assumptions \citep{imbens2015causal}. However, while the difference-in-means estimator is unbiased, this does not automatically make it the preferred approach; and in particular regression adjustments are often used to improve power. For example, recent guidance from the U.S. Food and Drug Administration encourages adjustment for baseline covariates that are prognostic for the outcome \citep{FDA2023}.
+
+The study of regression adjustments in RCTs has a long tradition in statistics. \citet{fisher1935design} used arguments rooted in parametric linear modeling to advocate for such regression adjustments. Fisher's analysis was later critiqued by \citet{Freedman2008}, who argued that reliance on linear models was misaligned with model-free guarantees sought in RCT inference. \citet{Lin2013}, however, responded to Freedman's critique by showing that regression adjustments do not require parametric assumptions to be near-unbiased for the average treatment effect. Furthermore, \citet{Lin2013} showed that regression adjustments with full treatment-control interaction weakly dominate both the difference in means estimator and Fisher's simple regression adjustment in terms of their leading-order (root-$n$ scale) errors. Lin's weak dominance result has led such treatment-interacted regressions to be often presented as a safe starting point for use of regression adjustments in RCTs \citep{li2017general,negi2021revisiting,Wager2025}.
+
+A gap in this narrative, however, is that the first-order advantage of treatment-interacted regression over simple regression is strict only when the randomization probability satisfies $\pi \neq 0.5$ (and treatment effects vary with the covariates); the dominance is weak at every $\pi$. In evenly randomized trials with $\pi = 0.5$, the first-order accuracy of both methods is equal for any data-generating distribution, i.e., first-order theory offers no guidance on which method to prefer. And, while $\pi = 0.5$ is of course a special case, this is an important special case in applications, and it is not a priori clear we should prefer interacted regression to simple regression here. For example, \citet{zhao2023covariate} emphasize the finite-sample trade-off associated with the larger number of parameters in interacted regression, arguing that simple regression may be more stable with limited sample size---especially when there are multiple treatment levels.
+
+To see what may be at stake in practice, consider an example modeled after a typical tech industry setting. Say a company runs an A/B test on a sample of its user base and adjusts for $X_i$, each user's own engagement level from the prior period (e.g., number of clicks). Such engagement measures are right-skewed because a small number of ``super-users'' generate far more activity than typical users. Suppose also that these high-engagement users generate more volatile outcomes, so that outcome noise increases with $X_i$. Specifically, let the raw $X_i$ be marginally $\mathrm{LogNormal}(0,0.8^2)$ and let
+\[
+\sigma(X_i)=1+2\,X_i,
+\qquad
+Y_i(0)=0.9\,X_i+\sigma(X_i)\varepsilon_i,
+\qquad
+Y_i(1)=Y_i(0)+1+0.4\,X_i,
+\]
+with $\varepsilon_i\overset{\mathrm{iid}}{\sim}N(0,1)$. Thus, the treatment effect itself varies with prior engagement, while the variance of the outcome is substantially larger for the users in the right tail. Here the whitened covariate has skewness $3.69$ and kurtosis $34.4$, and the heterogeneity share $R^2_\tau$ defined in Section \ref{sec:asymptotics} is $0.0032$. Our second-order formula gives an asymptotic deficiency of $\Delta = 15.6$ for IREG relative to REG: asymptotically, using IREG costs about sixteen users' worth of precision. At $n=500$ this predicts that IREG's mean-squared error should exceed REG's by $3.1\%$, and simulation gives $2.3\%$ (Monte Carlo standard error $0.02\%$); at $n=2{,}000$ the prediction is $0.78\%$ and simulation gives $0.67\%$. The HC1 intervals of both estimators are close to nominal here at $n=500$: IREG+HC1 covers the population ATE in $94.5\%$ of replications and REG+HC1 in $95.0\%$.
+
+Two features of this example recur throughout the paper. First, the effect is real but bounded: a deficiency of sixteen observations matters at $n=500$ and is negligible at $n=50{,}000$. Second, the size of the deficiency is governed by high-order moments of the covariate distribution, and those same moments govern how quickly the second-order approximation becomes accurate. If we instead take $X_i \sim \mathrm{LogNormal}(0,1.8^2)$ with $\sigma(X_i)=1+1.5X_i$ and a treatment-effect slope of $0.3$---a tail heavy enough that the whitened covariate has skewness $136$---then the formula returns $\Delta \approx 3.9\times10^4$ and predicts an MSE ratio of $78.5$ at $n=500$, whereas the simulated ratio is $1.68$. In that regime the expansion gets the ordering right and substantially overstates the numerical gap; Appendix \ref{sec:validity} quantifies where the crossover occurs in a closely related scalar family, with $\sigma(X)=1+X$ and slope $0.4$, which differs from both examples in its heteroskedasticity.
+
+Motivated by this gap, we conduct a higher-order asymptotic analysis of both simple and interacted regression adjustments in RCTs to elucidate the relative merits of the two approaches when $\pi = 0.5$. We frame our findings in terms of asymptotic deficiency \citep{HodgesLehmann1970}. When two estimators have matching first-order behavior but one dominates the other on the second-order scale then, asymptotically, switching to the better one gives an accuracy boost that is equivalent to a fixed boost in sample size, which is referred to as the deficiency. Our results show that there is no universal second-order ordering: the comparison depends on covariate shape, treatment-effect heterogeneity, residual heteroskedasticity and nonlinear misspecification, and it can favor either estimator. The combination that favors simple regression in our examples is skewness interacting with heteroskedasticity or misspecification, as in the multiplicative error model commonly encountered in tech settings; simple regression can outperform interacted regression even when treatment-effect heterogeneity is absent. In the special case of Gaussian covariates with homoskedastic, well-specified errors the second-order coefficient instead favors IREG, and in the fixed-$p$ asymptotic framework it is linear in the number of covariates $p$. This qualitative pattern runs against the finite-sample parameter-count heuristic emphasized by \citet{zhao2023covariate}, though the magnitude involved is exactly $(p+1)R^2_\tau$ observations in that case, and fixed-$p$ asymptotics cannot speak to regimes in which the parameter count grows with $n$, which is the regime that motivates their concern.
+
+As a practical companion to this theory, we study confidence intervals from standard software, \texttt{lm\_lin} for IREG and \texttt{lm\_robust} for REG from the R package \texttt{estimatr}. In simulations with $\gamma=0$, where treatment effects are constant and there is no heterogeneity to account for, IREG with HC1 standard errors can undercover substantially when a covariate is skewed and residual variance grows in its tail, while REG with HC1 stays close to nominal in the designs we examine. The pattern is consistent with a leverage mechanism, since the interacted specification fits each arm separately. HC3 substantially improves IREG's coverage in most of these designs, but it remains below nominal under very heavy-tailed covariates and is unreliable when a treatment arm contains an observation with leverage one. In the null-heterogeneity design with the most skewed covariate, HC1's failure is primarily an understatement of the variance scale, which HC3 largely removes, leaving smaller distortions in the tails. Separately, under superpopulation sampling the variance of centered IREG for the population average treatment effect contains a component that its conventional robust variance does not include; it matters when covariate-explained heterogeneity is large. In a diagnostic, its feasible plug-in estimate tracks the true component when heterogeneity is large but is noisy and miscalibrated when heterogeneity is small or absent, so coverage gains from it need not reflect the estimand-level component (Section \ref{sec:estimand} and Appendix \ref{sec:correction}).
+
+\subsection{Related Work}
+
+\paragraph{Regression adjustment in randomized experiments.}
+The literature on regression adjustment in randomized experiments spans two complementary frameworks. The design-based literature treats the potential outcomes and covariates as fixed in a finite population, with randomness arising from treatment assignment. This is the framework of \citet{Lin2013}, \citet{li2017general}, and \citet{zhao2023covariate}. A complementary superpopulation framework treats the experimental units themselves as random draws and studies repeated sampling over both the units and treatment assignment. \citet{yang2001efficiency}, \citet{negi2021revisiting}, \citet{ye2023toward} and \citet{Wager2025} work in this setting. Our analysis follows the latter framework. This distinction is important because our goal is to characterize higher-order sampling behavior of REG and IREG under IID sampling rather than finite-population randomization error; as Section \ref{sec:feasible} shows, it also determines which variance estimator is appropriate.
+
+The relative performance of REG and IREG has been studied primarily through first-order asymptotic efficiency. \citet{yang2001efficiency} compare ANCOVA with and without treatment interactions in a superpopulation pretest-posttest setting, and \citet{Lin2013} shows that IREG weakly dominates REG and the difference-in-means estimator in leading-order asymptotic variance for general treatment probabilities, with equality between REG and IREG under balanced treatment assignment. \citet{zhao2023covariate} study the finite-sample consequences of the larger interacted specification and emphasize the role of the additional parameters introduced by treatment--covariate interactions, particularly in settings with multiple treatment levels. Our results complement this perspective: in the balanced Gaussian, homoskedastic, well-specified case the second-order coefficient favors IREG and, with $p$ fixed as $n\to\infty$, is linear in $p$, while outside this setting the sign of the second-order comparison depends on skewness, tail behavior, heteroskedasticity and misspecification.
+
+\paragraph{Variance estimation.}
+That inference for a population average treatment effect after interacted regression requires an additional variance component relative to the finite-population case is discussed by \citet{imbens2009recent}, \citet{negi2021revisiting}, \citet{zhao2021covariate} and \citet{ye2023toward}; the last of these gives a systematic account of ANCOVA versus ANHECOVA for clinical trials. \citet{samii2012equivalencies} establish the equivalence between design-based Neyman variance estimators and heteroskedasticity-robust regression variances, which is why HC2 is the default in \texttt{estimatr}. \citet{Young2019} documents concentrated leverage in regressions from published experiments, more so when treatment is interacted with covariates, and finds that randomization tests reject less often than the authors' conventional tests. Finite-sample behavior of heteroskedasticity-robust variance estimators is studied by \citet{ChesherJewitt1987}, \citet{MacKinnonWhite1985}, \citet{LongErvin2000} and \citet{imbens2016robust}; \citet{lei2021regression} recommend HC3-type corrections for regression adjustment with many covariates.
+
+\paragraph{Higher-order asymptotic theory.}
+First-order asymptotic approximations cannot distinguish estimators with the same limiting distribution, even when their finite-sample behavior differs materially. Higher-order asymptotic theory addresses this through Edgeworth expansions and the associated moment (Nagar-type) expansions; see, for example, \citet{BhattacharyaRao1976}, \citet{Hall1992} and \citet{Ghosh1994}, \citet{Sargan1974} for conditions under which formal moment expansions describe trimmed exact moments, and \citet{Rothenberg1988} for heteroskedasticity-robust test statistics. \citet{HodgesLehmann1970} introduced asymptotic deficiency as a measure of the additional sample size required by a less accurate estimator, while \citet{Rothenberg1984} emphasized the role of higher-order approximations when competing estimators share the same limiting distribution. Related work includes higher-order comparisons of first-order equivalent GMM and generalized empirical likelihood estimators by \citet{NeweySmith2004}.
+
+Recent work also studies higher-order regression adjustment under a design-based framework with many covariates. \citet{lei2021regression} characterize the bias of Lin's estimator when $p$ grows with $n$ and propose a bias-corrected estimator, and \citet{ChiangMatsushitaOtsu2026}, in Neyman's design-based framework with the number of covariates growing more slowly than $n$, derive the first- and second-order terms of the stochastic expansions of regression-adjusted estimators, analyze the higher-order behavior of existing inference procedures, and propose a cross-fitted estimator and a modified HC3 standard error. Our analysis instead studies the fixed-dimensional superpopulation problem and focuses on the second-order MSE comparison between REG and IREG under balanced treatment assignment.
+
+\paragraph{Estimands.} Our expansion concerns the population ATE under IID superpopulation sampling. Much of the design-based literature, including \citet{Lin2013}, \citet{lei2021regression} and \citet{ChiangMatsushitaOtsu2026}, targets the sample ATE of a fixed finite population, for which first-order variances differ and higher-order constants generally differ as well. Our own comparison of complete randomization with Bernoulli assignment shows how sensitive the $n^{-2}$ constant is to the probabilistic framework (Theorem \ref{theo:crt_reduction} shifts it by $4G$), so the constants of Theorem \ref{theo:deficiency} should not be carried over to finite-population analyses without recomputation.
+
+\section{Second-Order Analysis}
+\label{sec:asymptotics}
+
+We focus on completely randomized trials (CRTs) with causal effects formalized using the potential outcomes model \citep{imbens2015causal}. We assume the covariates $X_i\in \RR^p$ and potential outcomes $Y_i(0), \, Y_i(1) \in \RR$ are drawn IID from a distribution $P$, with average treatment effect $\tau = \EE{Y_i(1) - Y_i(0)}$. Treatment is assigned randomly conditional on the fixed treated group size $n_1=\sum_{i=1}^n W_i=\lfloor \pi n\rfloor$; treatment assignments are exchangeable but not independent. Because both regression estimators include an intercept, translating the covariates does not change the estimators, so we work without loss of generality with centered covariates, $\EE{X}=0$.
+
+The analyst observes $(X_i, \, Y_i, \, W_i)$ for $i = 1, \, \ldots, \, n$, where $Y_i = Y_i(W_i)$. We consider the following three estimators of the ATE:
+\begin{equation}
+\label{eq:estimators}
+\begin{split}
+&\htau_{DM} = \frac{1}{\abs{\cb{i : W_i = 1}}} \sum_{\cb{i : W_i = 1}} Y_i - \frac{1}{\abs{\cb{i : W_i = 0}}} \sum_{\cb{i : W_i = 0}} Y_i, \\
+&\htau_{REG} = \htau,  \text{ with }  Y_i \sim \alpha + X_i \beta + W_i \tau, \\
+&\htau_{IREG} = \htau + \frac{1}{n} \sum_{i = 1}^n X_i \hdelta,  \text{ with } Y_i \sim \alpha + X_i \beta + W_i \tau+  W_i X_i \delta,
+\end{split}
+\end{equation}
+where, e.g., $Y_i \sim \alpha + X_i \beta + W_i \tau$ means we algorithmically run a regression of $Y_i$ against $X_i$ and $W_i$ with an intercept (without making any claims on well-specification of such a regression). To describe their first-order behavior it is helpful to define the best linear approximation to the conditional response function of the potential outcomes,
+\begin{equation}
+\label{eq:regr}
+\cb{\alpha_{(w)}^*, \ \beta_{(w)}^*} =\argmin_{\alpha_{(w)},\,\beta_{(w)}} \cb{\EE{\p{Y_i(w) - X_i \beta_{(w)} - \alpha_{(w)}}^2}},
+\end{equation}
+together with the oracle residuals and the scaled heterogeneity direction
+\begin{equation}
+\label{eq:whitening}
+\begin{gathered}
+\varepsilon_i(w) = Y_i(w)-\alpha^*_{(w)}-X_i^\top\beta^*_{(w)},
+\\
+Z_i = \Sigma^{-1/2}X_i, \quad \Sigma = \Var{X_i},
+\qquad
+\gamma = \Sigma^{1/2}\p{\beta^*_{(1)}-\beta^*_{(0)}},
+\end{gathered}
+\end{equation}
+so that $\EEE[Z_i]=0$, $\EEE[Z_iZ_i^\top]=I_p$, $\EEE[Z_i\varepsilon_i(w)]=0$ and $\varepsilon_i = \varepsilon_i(W_i)$. All population quantities below are invariant to the choice of matrix square root: replacing $\Sigma^{1/2}$ by $\Sigma^{1/2}O$ for an orthogonal $O$ maps $Z\mapsto O^\top Z$ and $\gamma \mapsto O^\top\gamma$, under which every scalar in Theorem \ref{theo:deficiency} is unchanged. The first-order behavior of the three estimators is well known \citep{negi2021revisiting}.
+
+\begin{prop}
+\label{prop:first_order}
+Suppose that $X_i$ and $Y_i(w)$ have finite second moments and that $\Var{X_i}$ is invertible. Then all three estimators above are asymptotically normal, $\sqrt{n}(\htau_\cdot - \tau) \Rightarrow \nn(0, \, V_\cdot)$, with limiting variances
+\begin{equation}
+\begin{split}
+&V_{DM} = V_{IREG} +  \Var{X_i\p{\sqrt{\frac{\pi}{1 - \pi}} \, \beta_{(0)}^* + \sqrt{\frac{1 - \pi}{\pi}} \, \beta_{(1)}^*}}, \\
+&V_{REG} = V_{IREG} + \frac{\p{1 - 2\pi}^2}{\pi(1 - \pi)} \Var{X_i\p{\beta_{(1)}^* - \beta_{(0)}^*}}, \\
+&V_{IREG} = \Var{X_i\p{\beta_{(1)}^* - \beta_{(0)}^*}} + \sum_{w = 0, \, 1} \frac{1}{\PP{W_i = w}} \EE{\p{Y_i(w) - X_i\beta_{(w)}^* - \alpha_{(w)}^*}^2}.
+\end{split}
+\end{equation}
+\end{prop}
+
+Thus $\htau_{IREG}$ weakly dominates both $\htau_{DM}$ and $\htau_{REG}$ at every $\pi$; its advantage over $\htau_{REG}$ is strict for generic distributions $P$ when $\pi\neq0.5$, while at $\pi = 0.5$ the two regression estimators have the same asymptotic variance
+\begin{equation}
+\label{eq:Vstar}
+V^* = \|\gamma\|^2 + 4\EE{\varepsilon_i^2}
+= \|\gamma\|^2 + 2\EE{\varepsilon_i(1)^2} + 2\EE{\varepsilon_i(0)^2}.
+\end{equation}
+This is the setting we study. Because first-order theory is indifferent between the two methods, we turn to second-order asymptotics.
+
+\subsection{Deficiency and the expansion MSE}
+
+Suppose we compare two estimators $\htau_A$ and $\htau_B$ of a shared quantity $\tau$ whose mean-squared errors agree on the (first-order) $1/n$ but not on the (second-order) $1/n^2$ scale,
+\begin{equation}
+\label{eq:MSE_scaling}
+\MSE(\htau_A) = \frac{V}{n} + \frac{c_A}{n^2} + o\p{\frac{1}{n^2}}, \qquad
+\MSE(\htau_B) = \frac{V}{n} + \frac{c_B}{n^2} + o\p{\frac{1}{n^2}}.
+\end{equation}
+\citet{HodgesLehmann1970} propose quantifying the difference in performance by the number of extra samples required to compensate for using the less accurate estimator: they solve for $k_n$ such that $\htau_B$ run on $k_n$ samples matches the accuracy of $\htau_A$ on $n$ samples as closely as possible. When $\limn (k_n - n) = \Delta \in \RR$ exists, $\Delta$ is the asymptotic deficiency of $\htau_B$ relative to $\htau_A$. Under \eqref{eq:MSE_scaling},
+\begin{equation}
+\label{eq:deficiency}
+\Delta = \p{c_B - c_A}/\,V.
+\end{equation}
+
+Both regression estimators are smooth functions of sample moments, and for covariate distributions with atoms the relevant Gram matrices are singular with positive probability, so their exact second moments need not exist. We therefore work throughout with the second moment of the stochastic expansion rather than with the exact MSE, and we are explicit about the distinction.
+
+\begin{defi}[Expansion MSE]
+\label{def:msexp}
+Let $V_i$ collect the sample-moment coordinates entering the coefficient map of an estimator, let $\mu = \EEE[V_i]$, $\bar V = n^{-1}\sum_i V_i$, and suppose $\htau = g(\bar V)$ for a function $g$ that is three times continuously differentiable in a neighborhood of $\mu$ with $g(\mu) = \tau$. Write $Z^{(n)} = \sqrt n(\bar V - \mu)$ and let
+\begin{equation}
+\label{eq:hall_expansion}
+\tilde\tau_n
+= \tau
++ \frac{1}{\sqrt n} a_i Z^{(n)}_i
++ \frac{1}{2n} H_{ij}Z^{(n)}_iZ^{(n)}_j
++ \frac{1}{6n^{3/2}}A_{3,ijk}Z^{(n)}_iZ^{(n)}_jZ^{(n)}_k
+\end{equation}
+be the third-order Taylor polynomial of $g$ at $\mu$, with $a$, $H$ and $A_3$ the first three derivative tensors of $g$ at $\mu$ and the Einstein summation convention in force. The expansion MSE is $\MSEexp(\htau) = \EEE[(\tilde\tau_n-\tau)^2]$.
+\end{defi}
+
+Definition \ref{def:msexp} presumes that the $V_i$ are IID, as they are under Bernoulli assignment. Under complete randomization the assignments are dependent; there the observations in the two arms form independent IID samples (Lemma \ref{lemm:two_sample} in Appendix \ref{sec:proofs}), each estimator is a smooth function of the two per-arm sample means, and $\MSEexp$ is the second moment of the third-order Taylor polynomial of that function at the per-arm population means. $\MSEexp$ is a finite sum of moments of sample means and is well defined whenever those moments exist; it is the object that the deficiency calculations of \citet{Rothenberg1984} and \citet{Hall1992} manipulate. It is not the exact MSE. Conditions under which formal expansions of this kind describe suitably trimmed exact moments are given by \citet{Sargan1974}; we do not verify them here, and our Monte Carlo checks use the untrimmed empirical MSE, reporting the frequency of degenerate draws (Appendix \ref{sec:numerical-verification}).
+
+\begin{assu}[Sampling and moments]
+\label{assu:moments}
+$(X_i, Y_i(0), Y_i(1))$ are IID from $P$, $\Sigma = \Var{X_i} \succ 0$, $p$ is fixed, $\pi = 1/2$ with $n_1 = n/2$ for even $n$ (and $n_1 = \lfloor n/2\rfloor$ otherwise), and
+\[
+\EEE\big[\|X_i\|^{12}\big] + \sum_{w=0}^{1}\EEE\big[|Y_i(w)|^{12}\big] < \infty .
+\]
+\end{assu}
+
+Assumption \ref{assu:moments} is a convenient sufficient condition rather than a sharp one: the coefficients of Theorem \ref{theo:deficiency} involve moments of $Z$ of order at most four and mixed moments such as $\EEE[Z\varepsilon^2]$, while $\MSEexp$ additionally requires the sixth moments of the moment vector $V_i$, whose entries are products of at most two coordinates of $(X_i, Y_i)$. Assumption \ref{assu:moments} implies $\EEE\|V_i\|^6<\infty$ by the Cauchy--Schwarz inequality.
+
+\subsection{The second-order difference}
+
+\begin{theo}
+\label{theo:deficiency}
+Let Assumption \ref{assu:moments} hold, and define
+\[
+K=\EEE[ZZ^\top\|Z\|^2],\qquad
+S=\EEE[Z\|Z\|^2],\qquad
+S_\gamma=\EEE[ZZ^\top(Z^\top\gamma)],
+\]
+\[
+E=\EEE[ZZ^\top\varepsilon],
+\qquad
+E_{W}=\EEE[ZZ^\top(W-\tfrac12)\varepsilon] = \tfrac14\big(\EEE[ZZ^\top\varepsilon(1)]-\EEE[ZZ^\top\varepsilon(0)]\big).
+\]
+Then, with $\MSEexp$ as in Definition \ref{def:msexp} and under the balanced CRT,
+\[
+\MSEexp(\hat\tau_{\mathrm{IREG}}) - \MSEexp(\hat\tau_{\mathrm{REG}}) = \frac{D_p}{n^2}+O(n^{-5/2}),
+\]
+where
+\[
+\begin{aligned}
+D_p
+={}&
+-(2p+3)\|\gamma\|^2
++\gamma^\top K\gamma
+-(\gamma^\top S)^2
+-3\|S_\gamma\|_F^2\\
+&-16\tr(S_\gamma E_W)
+-8(\gamma^\top S)\tr(E_W)
++8\gamma^\top E_WS
++8\tr(E^2)+8S^\top \EEE[Z\varepsilon^2].
+\end{aligned}
+\]
+Consequently the asymptotic deficiency of IREG relative to REG, computed from the expansion MSE, is $\Delta = D_p/V^*$ with $V^*$ as in \eqref{eq:Vstar}.
+\end{theo}
+
+The proof is in Appendix \ref{sec:proofs}. Under complete randomization the two arms are independent IID samples (Lemma \ref{lemm:two_sample}), which yields an exact expansion of the conditional expansion MSE at any treatment fraction (Lemma \ref{lemm:conditional}); the proof then combines a reduction from the completely randomized design to Bernoulli assignment (Theorem \ref{theo:crt_reduction}) with the Bernoulli calculation (Theorem \ref{theo:bern_deficiency}), whose index algebra is certified symbolically by a script in the replication repository.
+
+The expression for $D_p$ combines four blocks: a covariate shape block scaled by the heterogeneity direction $\gamma$; terms crossing $\gamma$ with residual asymmetry; residual heteroskedasticity; and nonlinear misspecification. None of these alone dictates the ordering. In particular, the deficiency need not favor REG even when there is no treatment-effect heterogeneity: when $\gamma=0$ all terms involving $\gamma$ vanish and
+\[
+D_p=8\tr(E^2)+8S^\top \EEE[Z\varepsilon^2].
+\]
+While $\tr(E^2) = \|E\|_F^2 \geq 0$, the term $S^\top \EEE[Z\varepsilon^2]$ can have either sign, so $\Delta$ can be positive or negative in this case.
+
+\begin{rema}[Bias and variance components]
+\label{rema:bias}
+Two of the terms in $D_p$ are a squared-bias difference. Let $\tilde\tau_n$ be the Taylor polynomial of Definition \ref{def:msexp}, expanded under complete randomization in the per-arm sample means of Lemma \ref{lemm:two_sample}. Its linear term has mean zero; its quadratic term has mean $\frac12\tr(H\Sigma_n)$, where $H$ is the Hessian of the estimator's coefficient map and $\Sigma_n$ the covariance of the per-arm means, which is exactly proportional to $1/n$; and its cubic term has mean $O(n^{-2})$, because third central moments of sample means are third cumulants divided by squared sample sizes. The expansion bias is therefore $\EEE[\tilde\tau_n-\tau]=\frac12\tr(H\Sigma_n)+O(n^{-2})$, and evaluating the Hessians of the two estimators (Appendix \ref{sec:proofs}) gives
+\[
+\EEE[\tilde\tau_{n,\REG}-\tau] = -\frac{4\tr(E_W)+\gamma^\top S}{n}+O(n^{-2}),
+\qquad
+\EEE[\tilde\tau_{n,\IREG}-\tau] = -\frac{4\tr(E_W)}{n}+O(n^{-2}),
+\]
+so that $n^2\{\mathrm{Bias}^2_{\IREG}-\mathrm{Bias}^2_{\REG}\}=-(\gamma^\top S)^2-8(\gamma^\top S)\tr(E_W)$ to leading order, exactly the $-Q-8B_P$ part of $D_p$ in the notation of Appendix \ref{sec:proofs}; the remaining terms are variance contributions. These are statements about the expansion, not about the exact finite-sample bias; Appendix \ref{sec:numerical-verification} compares them with simulated biases.
+\end{rema}
+
+To interpret the scale of $\Delta$ we use the heterogeneity share
+\[
+R^2_\tau
+=
+\frac{\|\gamma\|^2}{\|\gamma\|^2+4\EEE[\varepsilon_i^2]}
+= \frac{\|\gamma\|^2}{V^*}.
+\]
+Consider the balanced doubly robust pseudo-outcome built from the linear working models $\mu_w(x)=\alpha^*_{(w)}+x^\top\beta^*_{(w)}$,
+\[
+\phi_i
+=
+2W_i\{Y_i-\mu_1(X_i)\}
+-
+2(1-W_i)\{Y_i-\mu_0(X_i)\}
++
+\mu_1(X_i)-\mu_0(X_i).
+\]
+Under the canonical representation $\phi_i-\tau = \gamma^\top Z_i+\xi_i$ with $\xi_i = 2W_i\varepsilon_i(1)-2(1-W_i)\varepsilon_i(0)$, we have $\EEE[Z_i\xi_i]=0$, $\Var{\xi_i}=4\EE{\varepsilon_i^2}$ and $\Var{\gamma^\top Z_i}=\|\gamma\|^2$, so $R^2_\tau$ is the population $R^2$ from linearly predicting the treatment-effect pseudo-outcome from $Z_i$. As noted in Section \ref{sec:estimand}, $R^2_\tau$ is also the fraction of the population-estimand sampling variance of $\htau_\IREG$ that the default interacted-regression standard error omits under superpopulation sampling.
+
+\begin{coro}
+\label{coro:homosk}
+In addition to Assumption \ref{assu:moments}, suppose the potential outcomes satisfy a well-specified linear model with homoskedastic errors, $\EE{\varepsilon_i(w)\cond X_i}=0$ and $\EE{\varepsilon_i^2(w)\cond X_i}=\sigma_w^2$ for $w\in\{0,1\}$. Then $E = E_W = 0$ and $\EEE[Z\varepsilon^2]=0$, so
+\begin{equation}
+\label{eq:homosk_deficiency}
+\Delta
+=
+R_\tau^2
+\left[
+-(2p+3)
++
+\frac{\gamma^\top K\gamma-(\gamma^\top S)^2-3\|S_\gamma\|_F^2}{\|\gamma\|^2}
+\right].
+\end{equation}
+In the Gaussian sub-case $K = (p+2)I_p$, $S=0$ and $S_\gamma = 0$, so that $\Delta = -(p+1)R_\tau^2$.
+\end{coro}
+
+In the Gaussian homoskedastic case, then, the second-order coefficient favors IREG and is linear in the number of covariates, where $p$ is held fixed as $n\to\infty$. This runs against the direction of the parameter-count heuristic of \citet{zhao2023covariate}, but its magnitude, $(p+1)R^2_\tau$ observations, is small relative to any realistic $n$; and because Theorem \ref{theo:deficiency} holds $p$ fixed, it says nothing about designs in which $p$ grows with $n$, which is the regime in which parameter counts are the binding concern \citep{lei2021regression,ChiangMatsushitaOtsu2026}. The following special case makes the mechanism transparent.
+
+\begin{rema}[Independent symmetric coordinates]
+\label{rema:kurtosis}
+Suppose that, in addition to the conditions of Corollary \ref{coro:homosk}, the whitened covariates have independent coordinates with symmetric marginals and $\gamma$ loads on coordinate $j$ only. Then $S=0$ and $S_\gamma=0$, while $\gamma^\top K\gamma=(\kappa_j+p-1)\|\gamma\|^2$ with $\kappa_j=\EEE[Z_j^4]$, so
+\[
+\Delta = R^2_\tau\p{\kappa_j - p - 4}.
+\]
+Simple regression is preferred at second order exactly when the kurtosis of the covariate driving the heterogeneity exceeds $p+4$; the Gaussian case $\kappa_j=3$ recovers $\Delta = -(p+1)R^2_\tau$.
+\end{rema}
+
+\begin{coro}
+\label{coro:mult_normproportional}
+In addition to Assumption \ref{assu:moments}, suppose the potential outcomes follow
+\[
+Y_i(w) = \alpha^*_{(w)} + X_i^\top\beta^*_{(w)} + \eta_i\|Z_i\|_2,
+\]
+where $\EE{\eta_i}=0$, $\EE{\eta_i^2}=\nu^2$ and $\eta_i$ is independent of $(Z_i,W_i)$. Then $\EE{\varepsilon_i(w)\cond Z_i}=0$ and $\EE{\varepsilon_i^2(w)\cond Z_i}=\nu^2\|Z_i\|_2^2$, and
+\begin{equation}
+\label{eq:mult}
+\Delta
+=
+R_\tau^2
+\left[
+-(2p+3)
++
+\frac{\gamma^\top K\gamma-(\gamma^\top S)^2-3\|S_\gamma\|_F^2}{\|\gamma\|^2}
+\right]
++
+\frac{8\nu^2\,S^\top S}{\|\gamma\|^2+4\nu^2 p}.
+\end{equation}
+\end{coro}
+
+\paragraph{Interpretation and scaling.}
+It is useful to consider how the terms in \eqref{eq:mult} behave. The treatment-effect signal relative to residual variance is small in many applications, so terms multiplied by $R_\tau^2$ rarely dominate unless the moment factors are large. The bracketed component is negative and of order $p$ in the leading cases we have examined---it equals $-(p+1)$ under Gaussian covariates and $\kappa_j-p-4$ in the setting of Remark \ref{rema:kurtosis}---but its numerator grows with the higher moments of the covariate distribution, so it is sensitive to departures from Gaussianity in either direction.
+
+The remaining term is nonnegative, since $8\nu^2\|S\|^2/(\|\gamma\|^2+4\nu^2p)\geq0$, and it vanishes only when the whitened covariates have no third-moment skewness in the direction $S=\EEE[Z\|Z\|^2]$. Covariates that are bounded below before centering, such as measures of user activity, engagement or spending, typically have large $\|S\|$, and the term can then dominate the covariate-shape block. The scalar case makes this transparent: with $p=1$, Corollary \ref{coro:mult_normproportional} gives
+\[
+\Delta
+=
+R_\tau^2\cb{\EE{Z_i^4}-4\EE{Z_i^3}^2-5}
++
+\frac{8\nu^2\EE{Z_i^3}^2}{\gamma^2+4\nu^2}.
+\]
+Using Pearson's inequality $\EE{Z_i^4}\geq \EE{Z_i^3}^2+1$ \citep[see, e.g.,][]{rohatgi1989sharp} and $8\nu^2/(\gamma^2+4\nu^2) = 2(1-R^2_\tau)$,
+\[
+\Delta
+\geq
+-4R_\tau^2 + (2-5R_\tau^2)\EE{Z_i^3}^2 .
+\]
+So when $R_\tau^2 < 2/5$ the deficiency is positive as soon as $\EE{Z_i^3}^2 > 4R^2_\tau/(2-5R^2_\tau)$, and the lower bound grows linearly in $\EE{Z_i^3}^2$. The converse caveat, documented in Appendix \ref{sec:validity}, is that the same third and fourth moments that make $\Delta$ large also slow the convergence of the expansion: in the lognormal family we study, the regime in which $\Delta$ is large is also the regime in which $1+\Delta/n$ materially overstates the finite-sample MSE ratio at moderate $n$.
+
+\begin{rema}[Nearly balanced designs]
+\label{rema:local}
+Exact balance is not needed for Theorem \ref{theo:deficiency} to be informative. Under Assumption \ref{assu:moments} (with Lemma \ref{lemm:conditional}), if $n_1/n = 1/2 + h/\sqrt n$ for fixed $h$, then by Proposition \ref{prop:first_order} the first-order variance gap between the two estimators is $-16h^2\|\gamma\|^2/n + O(n^{-3/2})$, so that
+\[
+\MSEexp(\htau_\IREG)-\MSEexp(\htau_\REG) = \frac{D_p - 16h^2\|\gamma\|^2}{n^2}+O(n^{-5/2}).
+\]
+Imbalance of order $\sqrt n$ units therefore shifts the comparison toward IREG by a known amount; the $4\|\gamma\|^2$ term relating the Bernoulli and CRT designs in Theorem \ref{theo:crt_reduction} is the special case in which $h^2$ is replaced by its expectation $1/4$ under Bernoulli randomization.
+\end{rema}
+
+\section{Feasible Inference}
+\label{sec:feasible}
+
+The second-order results concern point estimation. In practice both estimators are reported with confidence intervals, and the behavior of those intervals depends on the variance estimator as much as on the estimator. This section studies the standard implementation. Its findings are simulation evidence, subordinate to the theory of Section \ref{sec:asymptotics}.
+
+\subsection{Standard implementation}
+\label{sec:standard}
+
+We use the R package \texttt{estimatr} \citep{estimatr}. REG is \texttt{lm\_robust(y \textasciitilde{} w + x)}. IREG is \texttt{lm\_lin(y \textasciitilde{} w, covariates = \textasciitilde{} x)}, which centres the covariates at their sample means, interacts them with treatment, and reports $\htau_\IREG$ as its coefficient on $w$. For a regression with $k$ columns, residuals $\hat e_i$ and leverages $H_{ii}$, HC1 scales the squared residuals in the sandwich by $n/(n-k)$, HC2 by $1/(1-H_{ii})$ and HC3 by $1/(1-H_{ii})^2$; intervals use $t$ critical values with $n-k$ degrees of freedom. HC1 is Stata's default, and \citet{Kranz2024} finds that $98.1\%$ of 40,571 heteroskedasticity-robust Stata regressions in reproduction packages of leading economics journals use it; HC2 is the default of \texttt{lm\_robust} and \texttt{lm\_lin} without clustering, motivated by its equivalence with Neyman's variance estimator \citep{samii2012equivalencies}, so our HC1 results correspond to requesting \texttt{se\_type = "HC1"} explicitly; HC3 approximates the jackknife \citep{MacKinnonWhite1985} and is recommended for small and moderate samples by \citet{LongErvin2000}. The downward bias of the unadjusted sandwich is governed by the leverages \citep{ChesherJewitt1987}. Leverage matters more for IREG than for REG in the same data, because the interacted specification amounts to separate least-squares fits in the two arms, each on about $n/2$ units.
+
+\subsection{A superpopulation caveat}
+\label{sec:estimand}
+
+For the centered IREG implementation considered here, the conventional robust covariance estimator treats $\bar X$ as fixed. Under the superpopulation sampling of Section \ref{sec:asymptotics}, $\htau_\IREG = \htau + \bar X^\top\hdelta$ with $\bar X$ random, and the first-order sampling variance of $\htau_\IREG$ around the population ATE contains an additional component $G/n$ that this estimator does not include, where
+\[
+G = \p{\beta^*_{(1)}-\beta^*_{(0)}}^\top\Sigma_X\p{\beta^*_{(1)}-\beta^*_{(0)}} = \|\gamma\|^2
+\]
+in the notation of \eqref{eq:whitening}, with $\Sigma_X=\Sigma=\Var{X_i}$; equivalently $G = R^2_\tau V^*$. The need for such a component is discussed by \citet{imbens2009recent}, \citet{negi2021revisiting}, \citet{zhao2021covariate} and \citet{ye2023toward}. The omission is specific to this implementation. To first order both estimators satisfy $\htau-\tau=\gamma^\top\bar Z+\bar\varepsilon_1-\bar\varepsilon_0+o_P(n^{-1/2})$, with $\bar Z$ the full-sample mean of $Z_i$ and $\bar\varepsilon_w$ the arm-$w$ mean of $\varepsilon_i$, so both have first-order variance $V^*/n$. The residuals of the interacted fit are approximately $\varepsilon_i$, so its robust variance estimates $(V^*-G)/n$. REG omits the interactions, its residuals are approximately $\varepsilon_i+(W_i-\frac12)\gamma^\top Z_i$, and at $\pi=\frac12$ its robust variance of the treatment coefficient is approximately $4n^{-2}\sum_i\hat e_i^2$, which estimates $(4\EE{\varepsilon_i^2}+G)/n=V^*/n$; in the large-heterogeneity design of Appendix \ref{sec:correction}, REG+HC1 covers the population ATE in \gz{corr:large_hte_n500_p5:REG_HC1:0.95}\% of replications. Omitting $G/n$ gives a nominal $95\%$ IREG interval asymptotic coverage $2\Phi(1.96\sqrt{1-R^2_\tau})-1$, which is \gz{analytic:cov:0.01}\% at $R^2_\tau=0.01$ and \gz{analytic:cov:0.1}\% at $R^2_\tau=0.1$: the component matters when covariate-explained heterogeneity is large relative to outcome noise and is negligible when it is small. A feasible first-order correction replaces $G$ by its plug-in estimate,
+\begin{equation}
+\label{eq:vsp}
+\hat V_{\mathrm{SP}} = \hat V_\IREG + \frac{\hdelta^\top\hat\Sigma_X\hdelta}{n},
+\end{equation}
+with $\hdelta$ the fitted interaction coefficients and $\hat\Sigma_X$ the sample covariance of $X$.
+
+The plug-in must be distinguished from the quantity it estimates, because it is biased upward in finite samples. To leading order $\EE{\hdelta^\top\hat\Sigma_X\hdelta} \approx G + \operatorname{tr}\{\Sigma_X\Var{\hdelta}\}$. With homoskedastic, well-specified errors of variance $\sigma^2$ in both arms, each arm's slope is estimated from about $n/2$ units, so $\Var{\hdelta}\approx 4\sigma^2\Sigma_X^{-1}/n$ and
+\[
+\EE{\hdelta^\top\hat\Sigma_X\hdelta/n} \approx \frac{G}{n} + \frac{4p\sigma^2}{n^2}.
+\]
+In the five Gaussian homoskedastic designs of the correction study (Appendix \ref{sec:correction}) this approximation matches the simulated mean of the plug-in to within \gz{bias:gauss:maxrelerr}\%. The second term does not depend on $G$: when $\gamma=0$ the plug-in consists of it entirely, and when $G$ is small it can exceed $G/n$. Under heteroskedasticity and heavy-tailed covariates $\Var{\hdelta}$ is larger, its leading form involving $\EE{\varepsilon_i^2(X_i-\mu)(X_i-\mu)^\top}$, and the leading-order approximation itself becomes less accurate; we use it as an explanation of the mechanism, not as an exact formula. A coverage change produced by \eqref{eq:vsp} therefore need not reflect the estimand-level component.
+
+Appendix \ref{sec:correction} separates the two by also adding the true $G/n$ (an oracle correction, not a feasible procedure) on the same simulated datasets, at nominal levels from $80\%$ to $99\%$. With large heterogeneity ($R^2_\tau=\gz{corr:large_hte_n500_p5:R2}$) the plug-in averages \gz{corr:large_hte_n500_p5:ratio} times $G/n$, and the feasible and oracle intervals are both close to nominal at every level examined: at $95\%$, HC1 covers \gz{corr:large_hte_n500_p5:IREG_HC1:0.95}\%, HC1 plus $G/n$ \gz{corr:large_hte_n500_p5:IREG_HC1o:0.95}\% and HC1 plus the plug-in \gz{corr:large_hte_n500_p5:IREG_HC1c:0.95}\%, with a median interval \gz{corr:large_hte_n500_p5:wr} times as wide as HC1's. With $\gamma=0$ and a heavily skewed covariate, adding $G/n=0$ changes nothing, while the plug-in, which widens the median interval by a factor of only \gz{corr:lognormal_s2.0_prop:wr}, moves HC1 coverage at $95\%$ from \gz{corr:lognormal_s2.0_prop:IREG_HC1:0.95}\% to \gz{corr:lognormal_s2.0_prop:IREG_HC1c:0.95}\%. That agreement with nominal is a crossing point, not calibration: across nominal levels the plug-in interval is miscalibrated, covering \gz{corr:lognormal_s2.0_prop:IREG_HC1c:0.80}\% at $80\%$ and \gz{corr:lognormal_s2.0_prop:IREG_HC1c:0.99}\% at $99\%$. Since $G=0$ in this design, the plug-in's effect is finite-sample compensation for the understated HC1 variance, not recovery of a missing variance component. We therefore use the standard implementation in the rest of this section and do not propose \eqref{eq:vsp} as a general remedy.
+
+\subsection{Coverage without treatment-effect heterogeneity}
+\label{sec:gamma0}
+
+The finite-sample phenomenon we study is distinct from the caveat above. Every design in this section has $\gamma=0$: $\beta^*_{(1)}=\beta^*_{(0)}$ and the two potential outcomes share their residual, so every unit has the same treatment effect $\tau=1$. Then $R^2_\tau = 0$ and $G = 0$ exactly, the sample and population average treatment effects coincide, and the component of Section \ref{sec:estimand} is identically zero. Undercoverage in these designs is therefore a finite-sample failure of the variance estimator, not an omitted estimand-level variance.
+
+\paragraph{Designs.} Treatment is assigned by a balanced CRT with $n=500$ unless stated, and
+\[
+Y_i(0) = 0.9\textstyle\sum_{j} X_{ij} + g(X_i) + \sigma(X_i)\varepsilon_i,
+\qquad Y_i(1) = Y_i(0) + 1,
+\qquad \varepsilon_i\sim N(0,1).
+\]
+The base design has $p=1$, a raw right-skewed covariate $X_i\sim\mathrm{LogNormal}(0,s^2)$ such as prior engagement, $\sigma(X)=1+X$ and $g = 0$. We vary $s$, add misspecification $g$ with homoskedastic or heteroskedastic noise, vary $n$, and use $p=5$ with $X_{i1}$ lognormal, $X_{i2},\ldots,X_{i5}\sim N(0,1)$ and $\sigma = 1+X_{i1}$. Each design uses $20{,}000$ replications ($10{,}000$ at $n=2{,}000$ and $4{,}000$ at $n=8{,}000$); with $20{,}000$ replications the Monte Carlo standard error of every reported coverage is at most \gz{mcse:max20k} percentage points. The simulations call \texttt{estimatr}'s own fitting routine with design matrices built exactly as \texttt{lm\_robust} and \texttt{lm\_lin} build them; Appendix \ref{sec:r-validation} describes how this was validated.
+
+\paragraph{Results.} Table \ref{tab:gamma0-skew} shows that IREG+HC1 coverage deteriorates steadily as the covariate becomes more skewed: from \gz{lognormal_s0.6_prop:IREG_HC1:all}\% at $s=0.6$ to \gz{lognormal_s1.5_prop:IREG_HC1:all}\% at $s=1.5$ and \gz{lognormal_s2.0_prop:IREG_HC1:all}\% at $s=2.0$. REG+HC1 stays between \gz{all:REG_HC1:min}\% and \gz{all:REG_HC1:max}\% in every design of this section. HC2 recovers part of the gap for IREG and HC3 most of it. Table \ref{tab:gamma0-other} extends the picture. With Gaussian covariates, quadratic misspecification is harmless; with a skewed covariate, a misspecification that grows in the tail produces undercoverage even with homoskedastic noise (\gz{lognormal_s1.0_quadstd:IREG_HC1:all}\% for IREG+HC1). In the base design with $s=1.2$, the undercoverage shrinks as $n$ grows, from \gz{lognormal_s1.2_prop_n200:IREG_HC1:all}\% at $n=200$ to \gz{lognormal_s1.2_prop_n2000:IREG_HC1:all}\% at $n=2{,}000$ and \gz{lognormal_s1.2_prop_n8000:IREG_HC1:all}\% at $n=8{,}000$, and it persists with $p=5$.
+
+The pattern is consistent with the leverage mechanism of \citet{ChesherJewitt1987}. IREG is equivalent to separate least-squares fits in the two arms, each on $n/2$ units, so a rare extreme covariate value has roughly twice the leverage it would have in REG's pooled fit---the median of the largest IREG leverage rises from \gz{lognormal_s0.6_prop:medlev} at $s=0.6$ to \gz{lognormal_s2.0_prop:medlev} at $s=2.0$---and its arm's slope is pulled towards it, shrinking its residual exactly where $\sigma(X)$ is largest. HC1 does not undo this shrinkage; the factor $1/(1-H_{ii})^2$ in HC3 largely does.
+
+\paragraph{Scale or shape.} Table \ref{tab:scale} examines the $s=2$ design more closely. If the studentized statistic $T=(\htau-\tau)/\widehat{\mathrm{SE}}$ behaved like a scaled $t$ variable, $T\approx c\,t_{n-k}$, a single scale $c$ read off the $95\%$ coverage would predict coverage at every level. For IREG+HC1, $c=\gz{diag:scale:IREG_HC1}$, and the prediction is within \gz{diag:scale:IREG_HC1:maxdev} points of the observed coverage at every level from $80\%$ to $99\%$: HC1's failure in this design is primarily an understatement of the variance scale. The ratio of the empirical $|T|$ quantile to the $t$ quantile nevertheless rises from \gz{diag:scale:IREG_HC1:0.80:qratio} at $80\%$ to \gz{diag:scale:IREG_HC1:0.99:qratio} at $99\%$, so the tails of $T$ are also heavier than those of a scaled $t$.
+
+\paragraph{Variability or standard error?} Coverage alone does not say whether IREG is more variable or only has a poorer standard error; Table \ref{tab:sampling} reports both. At $s=2$, the Monte Carlo standard deviation of $\htau_\IREG$ is \gz{samp:s2.0:sdI} against \gz{samp:s2.0:sdR} for $\htau_\REG$, an MSE ratio of \gz{samp:s2.0:mseratio}, while their median HC1 standard errors are almost equal (\gz{samp:s2.0:seI} and \gz{samp:s2.0:seR}): in this design IREG is genuinely more variable, and HC1 does not register the difference. Because both sampling distributions are heavy-tailed, the Monte Carlo standard deviations exceed the median standard errors even for REG, whose coverage is close to nominal, so the informative comparison is between the two estimators.
+
+\paragraph{Connection with Section \ref{sec:asymptotics}.} The same covariate-tail features that enter the second-order MSE coefficient are also associated with more severe within-arm leverage and HC1 undercoverage in our simulations. In the designs of this section $\gamma=0$, so every term of $D_p$ that involves $\gamma$ vanishes, including the kurtosis terms; with one covariate and well-specified, shared residuals, only the product of the covariate's skewness and the heteroskedasticity moment $\EEE[Z\varepsilon^2]$ remains, and it is positive, favoring REG. Table \ref{tab:sampling} compares the implied prediction $1+\Delta/n$ with the simulated MSE ratio in the same designs: they agree closely for $s\le0.8$ (\gz{samp:s0.8:pred} predicted against \gz{samp:s0.8:mseratio} simulated at $s=0.8$), the simulated ratio exceeds one in every design, as predicted, and from $s=1$ onward the prediction exceeds the simulated ratio by a growing margin, for the reasons discussed in Appendix \ref{sec:validity}. The covariate representation matters accordingly. On the same $s=2$ datasets, adjusting for $\log(1+X)$ instead of $X$ lowers the median of the largest IREG leverage from \gz{tr:X:lev} to \gz{tr:log1pX:lev}, and IREG+HC1 then covers \gz{tr:log1pX:IREG_HC1:cov}\% instead of \gz{tr:X:IREG_HC1:cov}\%; but the median interval widens from \gz{tr:X:IREG_HC1:width} to \gz{tr:log1pX:IREG_HC1:width}, because the outcome is linear in $X$ in this design. The check ties the extreme undercoverage to the tail of the raw covariate; it does not show that transformation is generally preferable.
+
+\begin{table}[htbp]
+\centering
+\caption{Coverage (\%) of nominal $95\%$ intervals when $\gamma=0$ ($R^2_\tau=0$): $X\sim\mathrm{LogNormal}(0,s^2)$, $\sigma(X)=1+X$, $p=1$, $n=500$, $20{,}000$ replications. ``Max.\ lev.''\ is the median over replications of the largest IREG leverage.}
+\label{tab:gamma0-skew}
+\small
+\begin{tabular}{rrr|ccc|cc}
+\toprule
+& & & \multicolumn{3}{c|}{\textbf{IREG} (\texttt{lm\_lin})} & \multicolumn{2}{c}{\textbf{REG} (\texttt{lm\_robust})} \\
+$s$ & skew $Z$ & Max.\ lev. & HC1 & HC2 & HC3 & HC1 & HC3 \\
+\midrule
+\tablebody{tables/gamma0_skew_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Coverage (\%) of nominal $95\%$ intervals when $\gamma=0$ in further designs. Unless stated, $p=1$ and $X\sim\mathrm{LogNormal}(0,s^2)$; $Z$ is the standardized covariate.}
+\label{tab:gamma0-other}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrr|ccc|cc}
+\toprule
+& & & \multicolumn{3}{c|}{\textbf{IREG}} & \multicolumn{2}{c}{\textbf{REG}} \\
+Design & $n$ & Reps & HC1 & HC2 & HC3 & HC1 & HC3 \\
+\midrule
+\tablebody{tables/gamma0_other_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Scale versus shape of the studentized statistic in the $\gamma=0$, $s=2$ design of Table \ref{tab:gamma0-skew}. The implied scale $c$ solves $2F_{t}(q_{0.975}/c)-1=$ observed $95\%$ coverage; ``predicted'' is $2F_t(q/c)-1$ at each level; the last row of each block divides the empirical quantile of $|T|$ by the corresponding $t$ quantile.}
+\label{tab:scale}
+\small
+\begin{tabular}{lccccc}
+\toprule
+& $80\%$ & $90\%$ & $95\%$ & $98\%$ & $99\%$ \\
+\midrule
+\tablebody{tables/scale_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Monte Carlo standard deviation and MSE of $\htau_\IREG$ and $\htau_\REG$ against their median HC1 and HC3 standard errors, in the designs of Table \ref{tab:gamma0-skew}; $1+\Delta/n$ is the second-order prediction of Theorem \ref{theo:deficiency} for the same designs.}
+\label{tab:sampling}
+\small
+\begin{tabular}{r|cc|cc|ccc}
+\toprule
+& \multicolumn{2}{c|}{Monte Carlo SD} & \multicolumn{2}{c|}{MSE ratio IREG/REG} & \multicolumn{3}{c}{Median standard error} \\
+$s$ & IREG & REG & simulated & $1+\Delta/n$ & IREG HC1 & REG HC1 & IREG HC3 \\
+\midrule
+\tablebody{tables/sampling_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{HC3 and extreme leverage}
+\label{sec:hc3}
+
+HC3 largely removes the scale error. In the $s=2$ design its implied scale is \gz{diag:scale:IREG_HC3} (Table \ref{tab:scale}), and the $|T|$ quantile ratio is \gz{diag:scale:IREG_HC3:0.80:qratio} at $80\%$, rising to \gz{diag:scale:IREG_HC3:0.99:qratio} at $99\%$. The remaining deviations are consistent with higher-order distortion of the studentized statistic beyond a simple scale error, which a different leverage adjustment of the variance need not remove. Table \ref{tab:gamma0-width} shows what the adjustment costs. Along the skewness sweep, the median ratio of the HC3 to the HC1 standard error of $\htau_\IREG$ rises from \gz{diag:s0.6:seratio:IREG:median} at $s=0.6$ to \gz{diag:s2.0:seratio:IREG:median} at $s=2$, with a $90$th percentile of \gz{diag:s2.0:seratio:IREG:p90}; for REG the corresponding values at $s=2$ are \gz{diag:s2.0:seratio:REG:median} and \gz{diag:s2.0:seratio:REG:p90}. The median HC1 widths of IREG and REG are nearly equal throughout (\gz{diag:s2.0:width:IREG_HC1} and \gz{diag:s2.0:width:REG_HC1} at $s=2$), so IREG+HC1's undercoverage is not accompanied by narrower typical intervals, and the gap between the median and the $90$th percentile of the HC3/HC1 ratio shows that HC3's adjustment is concentrated in a minority of replications. HC3 remains below nominal under very heavy-tailed covariates (Table \ref{tab:gamma0-skew}, $s \geq 1.8$).
+
+\begin{table}[htbp]
+\centering
+\caption{Median width of nominal $95\%$ intervals and the ratio $\mathrm{SE}_{\mathrm{HC3}}(\htau)/\mathrm{SE}_{\mathrm{HC1}}(\htau)$ (median and $90$th percentile over replications) in the designs of Table \ref{tab:gamma0-skew}.}
+\label{tab:gamma0-width}
+\small
+\begin{tabular}{r|cccc|cc|cc}
+\toprule
+& \multicolumn{4}{c|}{Median width} & \multicolumn{2}{c|}{IREG HC3/HC1} & \multicolumn{2}{c}{REG HC3/HC1} \\
+$s$ & IREG HC1 & IREG HC3 & REG HC1 & REG HC3 & median & p90 & median & p90 \\
+\midrule
+\tablebody{tables/gamma0_width_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Leverage one.} An observation with an extreme covariate value can carry a large share of the variance of $\htau_\IREG$. When a treatment arm contains exactly one such observation, it has leverage one in that arm's fit and is fitted exactly, so its residual is zero. A residual-based variance estimator then has no information about the observation's contribution: HC1 counts it as zero, and HC2 and HC3 face a $0/0$ that no leverage adjustment can resolve. To isolate this we use a rare-value design: $p=1$, $n=500$, $X_{i1}=\sqrt{(1-\rho)/\rho}$ with probability $\rho=0.02$ and $-\sqrt{\rho/(1-\rho)}$ otherwise, and $\sigma = 1+|X_{i1}|$ or $\sigma=1$. An arm contains exactly one rare unit in \gz{rare_q0.02_prop:lev1}\% of replications (Table \ref{tab:gamma0-rare}; each leverage-one subset contains at least \gz{lev1:n:min} replications, so the Monte Carlo standard errors of its coverages are at most \gz{lev1:mcse:max} points). With $\sigma=1+|X_{i1}|$ the isolated unit also carries the largest residual variance, and IREG+HC1 covers \gz{rare_q0.02_prop:IREG_HC1:lev1}\% of those replications; with $\sigma=1$, IREG+HC1 covers \gz{rare_q0.02_homo:IREG_HC1:lev1}\% of those replications. In \gz{rare_q0.02_prop:rankdef}\% of replications an arm contains no rare unit and the interacted design is rank-deficient; these replications are included in the ``all replications'' rows as the software reports them. REG estimates a single slope from both arms and does not create the same arm-specific leverage problem induced by the interacted specification; it stays near nominal in every row of the table.
+
+\paragraph{Software.} What HC2 and HC3 report at leverage one depends on how software evaluates the $0/0$, and packages do not treat full-leverage observations consistently \citep{Kranz2024}. Table \ref{tab:gamma0-rare} reports two versions of \texttt{estimatr}, which handle the case differently (Appendix \ref{sec:r-validation}); neither recovers the variance contribution of the isolated observation.
+
+\begin{table}[htbp]
+\centering
+\caption{Coverage (\%) in the rare-value design ($\gamma=0$, $p=1$, $n=500$, $\rho=0.02$, $20{,}000$ replications) by replication type: all replications as the software reports them, replications with a full-rank interacted design, and the subset of full-rank replications in which an arm contains a leverage-one unit (\gz{rare_q0.02_prop:lev1}\% and \gz{rare_q0.02_homo:lev1}\% of all replications). IREG is shown under \texttt{estimatr} \gz{estimatr:v1} and the GitHub development version \gz{estimatr:v2}, which evaluate the $0/0$ HC2/HC3 contribution differently and, in the \gz{rare_q0.02_prop:rankdef}\% and \gz{rare_q0.02_homo:rankdef}\% of rank-deficient replications, drop different collinear columns; REG does not depend on the version. A replication without a finite interval counts as a non-cover.}
+\label{tab:gamma0-rare}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l|ccc|ccc|cc}
+\toprule
+& \multicolumn{3}{c|}{\textbf{IREG}, v\gz{estimatr:v1}} & \multicolumn{3}{c|}{\textbf{IREG}, v\gz{estimatr:v2}} & \multicolumn{2}{c}{\textbf{REG}} \\
+& HC1 & HC2 & HC3 & HC1 & HC2 & HC3 & HC1 & HC3 \\
+\midrule
+\tablebody{tables/gamma0_rare_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Practical synthesis}
+\label{sec:practical}
+
+Across the designs considered, the point-estimation and inference results suggest two practically distinct regimes. When treatment-effect heterogeneity is small, the second-order comparison is driven by covariate shape, heteroskedasticity and misspecification, and in several of our skewed, heteroskedastic designs it favors REG; IREG can meanwhile encounter finite-sample leverage problems that make robust inference difficult, although HC3 substantially improves coverage in most of these designs. In this regime $G/n$ is small or zero, and the plug-in's bias term can be large relative to it. When heterogeneity is large, the second-order comparison moves in IREG's favor, and $G/n$ becomes an important part of the uncertainty about the population ATE for the centered IREG implementation. In our large-heterogeneity design, which is Gaussian, homoskedastic and well specified, Corollary \ref{coro:homosk} gives a deficiency of \gz{corr:large_hte_n500_p5:Delta} observations in IREG's favor, a real but modest second-order gain; the feasible correction closely tracks the oracle and gives near-nominal coverage at every nominal level examined, with intervals a median \gz{corr:large_hte_n500_p5:wr} times as wide as HC1's; and REG+HC1 covers the population ATE in \gz{corr:large_hte_n500_p5:REG_HC1:0.95}\% of replications without any correction. These patterns are a synthesis of the designs studied rather than a decision rule: the second-order comparison also depends on covariate moments, heteroskedasticity and misspecification, and $R^2_\tau$ is not directly observed.
+
+For practice, analysts using interacted regression can inspect the largest within-arm leverage: when it is near one, IREG robust standard errors should be treated with caution, and REG or a coarser specification of the interaction is a reasonable alternative. These are statements about the designs examined here, not a general ranking of the two estimators.
+
+\clearpage
+\section{Discussion}
+
+Regression adjustment in balanced trials involves three mechanisms that are easy to conflate, and the paper speaks to each separately.
+
+\emph{Point-estimator efficiency.} REG and IREG have the same first-order variance when $\pi=1/2$, and Theorem \ref{theo:deficiency} gives the next term of the comparison. It depends on treatment-effect heterogeneity, covariate shape, residual heteroskedasticity and nonlinear misspecification, and it can favor either estimator. Under Gaussian covariates with homoskedastic, well-specified errors the second-order coefficient favors IREG and is linear in $p$ (for fixed $p$); with independent symmetric coordinates the ordering is decided by whether the kurtosis of the heterogeneity-driving covariate exceeds $p+4$; heteroskedasticity or misspecification add terms that can favor REG even without heterogeneity. In our moderately skewed designs the deficiency amounts to at most a few dozen observations; its largest values occur in the heavy-tailed regimes where Appendix \ref{sec:validity} indicates that the second-order approximation itself becomes unreliable. There the finite-sample MSE gaps are far from modest (the MSE ratio is $1.68$ in the heavy-tailed example of Section \ref{sec:intro} and \gz{samp:s2.0:mseratio} in the $\gamma=0$, $s=2$ design of Section \ref{sec:gamma0}), the expansion does not predict their magnitude, and they are hard to estimate precisely by simulation because the relevant moments are dominated by rare covariate values (Appendix \ref{sec:validity}); in every design of Table \ref{tab:validity} and in the heavy-tailed example the simulated comparison has the sign the second-order analysis predicts. Second-order efficiency alone therefore rarely settles the choice between the two estimators.
+
+\emph{Estimand-level uncertainty.} For the population ATE, the first-order variance of the centered IREG estimator includes $G/n = R^2_\tau V^*/n$, which its conventional robust variance does not include; REG's robust variance has no such omission. This concerns what is being estimated, not the quality of a variance estimator. The feasible plug-in \eqref{eq:vsp} is biased upward by a term of leading order $\operatorname{tr}\{\Sigma_X\Var{\hdelta}\}/n$ that does not depend on $G$. When $G$ is small or zero this term can be large relative to the true component, so the plug-in can change coverage substantially for reasons unrelated to the estimand; a small $G$ does not make the feasible correction harmless.
+
+\emph{Finite-sample variance estimation.} Even with $G=0$, the robust variance of IREG can be too small in finite samples. The pattern in our simulations is consistent with the leverage mechanism of \citet{ChesherJewitt1987}: the interacted specification creates high within-arm leverage for rare covariate values, and HC1 does not adjust for leverage. HC3 substantially improves coverage in most of our designs, but not under very heavy-tailed covariates, and at leverage-one observations HC2 and HC3 face a $0/0$ that software resolves differently. REG does not create the same arm-specific leverage problem, and its HC1 intervals are comparatively stable in the designs we examine.
+
+Section \ref{sec:practical} summarizes how these mechanisms co-vary with the size of treatment-effect heterogeneity in the designs we study.
+
+None of these mechanisms explains the others. For practice, the upshot is that asymptotic efficiency of the point estimator does not determine the quality of the resulting confidence interval: the variance estimator actually used, the leverage structure of the fitted design, and the intended estimand each matter.
+
+Several limitations remain. Our theorem holds $p$ fixed and does not cover settings in which the number of covariates grows with the sample size, the regime studied by \citet{lei2021regression} and \citet{ChiangMatsushitaOtsu2026} and the one in which parameter-count heuristics are most relevant. The second-order result is a statement about the expansion MSE of Definition \ref{def:msexp}; relating it to exact or trimmed moments requires conditions we do not verify. The inference results are numerical: we do not derive higher-order expansions for HC coverage in the sense of \citet{Rothenberg1988}, and the leverage-one results depend on the software's treatment of a $0/0$ contribution. We treat the superpopulation variance component of IREG only briefly (Section \ref{sec:estimand} and Appendix \ref{sec:correction}); the upward bias of the plug-in motivates a bias-corrected version, which we do not develop. The scale-versus-shape and width diagnostics of Section \ref{sec:feasible} are numerical. Finally, the main analysis is for balanced complete randomization; Remark \ref{rema:local} extends it to designs whose imbalance is of order $\sqrt n$, but other treatment probabilities and designs remain open.
+
+\section{Conclusion}
+
+In balanced randomized experiments REG and IREG have the same first-order asymptotic variance, so their relative performance cannot be determined from standard efficiency theory alone. The main contribution of this paper is a closed-form second-order comparison: the difference in the $1/n^2$ terms of their expansion MSEs depends on treatment-effect heterogeneity, covariate shape, residual heteroskedasticity and nonlinear misspecification, can favor either estimator, and translates into an effective sample-size difference that is modest in the moderately skewed designs we examine; its largest values in our designs occur where the approximation itself is unreliable.
+
+As a practical companion, our simulations show that confidence intervals from standard software behave differently for the two estimators in finite samples. With no treatment-effect heterogeneity, interacted regression with HC1 standard errors can undercover substantially, in a pattern consistent with high within-arm leverage; HC3 substantially improves its coverage in most designs but not in the most extreme ones; and simple regression with HC1 is comparatively stable in the designs examined. Under superpopulation sampling, the variance of centered interacted regression for the population average treatment effect has an additional component, not included in its conventional robust variance, that matters when covariate-explained heterogeneity is large; in our large-heterogeneity design its plug-in estimate tracks the true component and restores calibration, with substantially wider intervals that reflect the added uncertainty, whereas with little or no heterogeneity the plug-in is noisy and miscalibrated across nominal levels.
+
+These inference results are simulation evidence, not theorems. A higher-order theory of robust-variance coverage for regression adjustment, designs with a growing number of covariates, and unbalanced designs beyond the local extension of Remark \ref{rema:local} remain outside the scope of the paper.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+
+\section{Proofs}
+\label{sec:proofs}
+
+Throughout this appendix, Latin indices $i,j,k,l,a,b,c,d$ attached to $Z$, $T_3$, $T_4$, $E$ and $P$ refer to \emph{coordinates} of the whitened covariate vector and are summed over in the Einstein convention; the unit index is suppressed. We write $G = \|\gamma\|^2$.
+
+\subsection{Second-order expansion}
+
+Under complete randomization with $n_1=m$ treated units, write $U_i^{(w)}$ for the vector collecting $X_i$, $Y_i(w)$ and the distinct entries of $X_iX_i^\top$ and $X_iY_i(w)$, and let $\bar U_1$ and $\bar U_0$ be the averages of $U_i^{(1)}$ over treated units and of $U_i^{(0)}$ over control units, with population means $\mu_1$ and $\mu_0$.
+
+\begin{lemm}[Two-sample representation]
+\label{lemm:two_sample}
+Let $(X_i,Y_i(0),Y_i(1))$ be IID and let the assignment vector $W$ be independent of them, with $\sum_iW_i=m$. Conditionally on $W$, the treated observations $\{(X_i,Y_i(1)):W_i=1\}$ and the control observations $\{(X_i,Y_i(0)):W_i=0\}$ are independent IID samples of sizes $m$ and $n-m$ from the laws of $(X,Y(1))$ and $(X,Y(0))$. Both $\htau_\REG$ and $\htau_\IREG$ are of the form $h_{j,r}(\bar U_1,\bar U_0)$ with $r=m/n$, where $h_{j,r}$ is infinitely differentiable in a neighborhood of $(\mu_1,\mu_0)$ and its derivatives at $(\mu_1,\mu_0)$ are rational functions of $r$ without poles in $(0,1)$.
+\end{lemm}
+
+\begin{proof}
+Given $W$, the units remain IID because $W$ is independent of them; the treated and control index sets are fixed and disjoint, so the two blocks are independent IID samples, observed through $Y_i(1)$ and $Y_i(0)$ respectively. Both estimators are rational functions of per-arm means, second moments and cross-moments: $\htau_\IREG$ is the difference of the arm-wise intercepts after centering at $\bar X=r\bar X_1+(1-r)\bar X_0$, with arm-wise least-squares slopes $S_w^{-1}s_w$ built from $\bar U_w$; $\htau_\REG$ uses the pooled within-arm slope, whose Gram matrix is $rS_1+(1-r)S_0$. The Gram matrices are invertible at $(\mu_1,\mu_0)$ because $\Sigma\succ0$, which gives the smoothness and the dependence on $r$.
+\end{proof}
+
+\begin{lemm}[Conditional expansion]
+\label{lemm:conditional}
+Under Assumption \ref{assu:moments}, let $\MSEexp_{\CRT,r}(\htau_j)$ be the second moment of the third-order Taylor polynomial of $h_{j,r}$ at $(\mu_1,\mu_0)$. For every $\eta\in(0,\frac12)$,
+\begin{equation}
+\label{eq:conditional_expansion}
+\MSEexp_{\CRT,r}(\hat{\tau}_{j}) = \frac{V_j(r)}{n}+\frac{c_j(r)}{n^2}+O(n^{-3}),
+\qquad j\in\{\REG,\IREG\},
+\end{equation}
+uniformly in $r=m/n\in[\frac12-\eta,\frac12+\eta]$, with $V_j$ and $c_j$ infinitely differentiable in $r$.
+\end{lemm}
+
+\begin{proof}
+The Taylor polynomial is a polynomial of degree three in $(\bar U_1-\mu_1,\bar U_0-\mu_0)$ whose coefficients are smooth in $r$ (Lemma \ref{lemm:two_sample}); its square has degree six. By Lemma \ref{lemm:two_sample} the two blocks are independent IID samples, so each mixed moment of the centered per-arm means is a finite sum of products of joint cumulants of $U^{(1)}$ and $U^{(0)}$ divided by powers of $m=rn$ and $n-m=(1-r)n$. Moments up to order six are finite because the entries of $U^{(w)}$ are products of at most two coordinates of $(X_i,Y_i(w))$ and Assumption \ref{assu:moments} bounds their twelfth moments. Collecting terms gives a finite expansion in powers of $1/n$ whose coefficients are rational in $r$ without poles on $[\frac12-\eta,\frac12+\eta]$; the terms beyond $n^{-2}$ are $O(n^{-3})$ uniformly on that interval.
+\end{proof}
+
+\begin{lemm}[Bernoulli and conditional expansions]
+\label{lemm:bern_conditional}
+Under Assumption \ref{assu:moments} with $W_i\stackrel{\mathrm{iid}}{\sim}\mathrm{Bernoulli}(1/2)$ independent of the units, let $\bar W=n^{-1}\sum_iW_i$. For every $\eta\in(0,\frac12)$,
+\[
+\MSEexp_\Bern(\htau_j) = \EEE\Big[\MSEexp_{\CRT,\bar W}(\htau_j)\,\mathbf 1\{|\bar W-\tfrac12|\le\eta\}\Big]+O(n^{-5/2}).
+\]
+\end{lemm}
+
+\begin{proof}
+Let $\mathcal P_\Bern$ be the Taylor polynomial of Definition \ref{def:msexp} under Bernoulli assignment and $\mathcal P_{\bar W}$ the conditional polynomial of Lemma \ref{lemm:conditional} evaluated at $r=\bar W$. Every coordinate of $\bar V-\mu$ is a polynomial of degree at most two in $(\bar W-\frac12,\bar U_1-\mu_1,\bar U_0-\mu_0)$ and is linear in the per-arm means; for instance $n^{-1}\sum_iW_iU_i^{(1)}-\frac12\mu_1=(\bar W-\frac12)\mu_1+\frac12(\bar U_1-\mu_1)+(\bar W-\frac12)(\bar U_1-\mu_1)$. Hence $\EEE[(\mathcal P_\Bern-\tau)^2\mid W]$ is bounded uniformly in $W$, and since $\Pr(|\bar W-\frac12|>\eta)\le2e^{-2n\eta^2}$ by Hoeffding's inequality, the event $|\bar W-\frac12|>\eta$ contributes $O(e^{-2n\eta^2})$. On its complement, write $\htau_j=F_j(\bar W-\frac12,\bar U_1-\mu_1,\bar U_0-\mu_0)$ with $F_j$ smooth. Both $\mathcal P_\Bern$ and $\mathcal P_{\bar W}$ agree with the Taylor expansion of $F_j$ at the origin through total degree three, $\mathcal P_\Bern$ because the map to $\bar V$ is polynomial and $\mathcal P_{\bar W}$ because it is exact in $\bar W$, so $\mathcal P_\Bern-\mathcal P_{\bar W}$ consists of terms of total degree at least four, each of which is at most cubic in the per-arm means. Conditionally on $\bar W$, the centered per-arm means are $O(n^{-1/2})$ in the $L^2$ norms that arise, and $\bar W-\frac12=O(n^{-1/2})$ in every $L^k$; hence $\|\mathcal P_\Bern-\mathcal P_{\bar W}\|_{L^2}=O(n^{-2})$ and $\|\mathcal P_\Bern+\mathcal P_{\bar W}-2\tau\|_{L^2}=O(n^{-1/2})$, and the Cauchy--Schwarz inequality gives $|\EEE[(\mathcal P_\Bern-\tau)^2-(\mathcal P_{\bar W}-\tau)^2]|=O(n^{-5/2})$ on that event.
+\end{proof}
+
+The proof of Theorem \ref{theo:deficiency} combines these lemmas, a reduction from the CRT to the Bernoulli design, and the Bernoulli calculation.
+
+\begin{theo}
+\label{theo:crt_reduction}
+Suppose the Bernoulli design has second-order difference
+\begin{equation}
+\label{eq:bern_second_order}
+\MSEexp_\Bern(\hat{\tau}_\IREG)-\MSEexp_\Bern(\hat{\tau}_\REG) = \frac{D_\Bern}{n^2}+O(n^{-5/2})
+\end{equation}
+at $\pi=1/2$, and let Assumption \ref{assu:moments} hold. Then, under complete randomization with $n_1=\lfloor n/2\rfloor$ treated units,
+\begin{equation}
+\label{eq:crt_second_order}
+\MSEexp_\CRT(\hat{\tau}_\IREG)-\MSEexp_\CRT(\hat{\tau}_\REG) = \frac{D_\Bern+4G}{n^2}+O(n^{-5/2}).
+\end{equation}
+\end{theo}
+
+\begin{proof}
+Let $n_1=\sum_{i=1}^n W_i$ under the Bernoulli design and write $r=n_1/n$. Conditional on $n_1=m$, the treatment assignment has the same distribution as a CRT with treatment fraction $r$. Fix $\eta\in(0,\frac12)$. By Lemma \ref{lemm:bern_conditional}, $\MSEexp_\Bern$ is, up to $O(n^{-5/2})$, the average over $n_1$ of $\MSEexp_{\CRT,r}$ restricted to $|r-\frac12|\le\eta$, and by Lemma \ref{lemm:conditional} the latter admits the expansion \eqref{eq:conditional_expansion} uniformly on that set, with $V_j$ and $c_j$ infinitely differentiable. At treatment fraction $r$ the first-order variance difference is, by Proposition \ref{prop:first_order},
+\[
+V_{\IREG}(r)-V_{\REG}(r) = -\frac{(1-2r)^2}{r(1-r)}G,
+\qquad
+\frac{(1-2r)^2}{r(1-r)} = 16u^2+O(u^4),
+\quad u = r-\tfrac12 .
+\]
+Under Bernoulli randomization with $\pi=1/2$, $\EEE[u^2]=1/(4n)$ and $\EEE[u^4]=O(n^{-2})$, so
+\[
+\frac{1}{n}\EEE\big[V_{\IREG}(r)-V_{\REG}(r)\big] = -\frac{4G}{n^2}+O(n^{-3}).
+\]
+For the second-order coefficients, a second-order Taylor expansion of $c_\IREG-c_\REG$ around $1/2$ together with $\EEE[u]=0$ and $\EEE[u^2]=O(n^{-1})$ gives $\EEE[c_{\IREG}(r)-c_{\REG}(r)] = c_{\IREG}(1/2)-c_{\REG}(1/2)+O(n^{-1})$. Averaging \eqref{eq:conditional_expansion} over $n_1$ therefore yields
+\[
+\MSEexp_{\Bern}(\hat{\tau}_{\IREG})-\MSEexp_{\Bern}(\hat{\tau}_{\REG}) = \frac{c_{\IREG}(1/2)-c_{\REG}(1/2)-4G}{n^2}+O(n^{-5/2}),
+\]
+so $D_{\Bern} = c_{\IREG}(1/2)-c_{\REG}(1/2)-4G$. Under balanced complete randomization $r=1/2$ for even $n$, giving $D_{\CRT} = c_{\IREG}(1/2)-c_{\REG}(1/2) = D_{\Bern}+4G$. For odd $n$, $r-1/2=O(n^{-1})$, so the induced change in the first-order variance difference is $O(n^{-3})$ and does not affect the $n^{-2}$ coefficient.
+\end{proof}
+
+\begin{theo}
+\label{theo:bern_deficiency}
+Let Assumption \ref{assu:moments} hold, except that $W_i\stackrel{\mathrm{iid}}{\sim}\text{Bernoulli}(1/2)$ independently of $(X_i,Y_i(0),Y_i(1))$. Define
+\begin{align}
+T_{3,ijk} &=\EEE[Z_iZ_jZ_k],
+&
+T_{4,ijkl} &=\EEE[Z_iZ_jZ_kZ_l],
+&
+q_i &=T_{3,ijk}\delta_{jk},
+&
+L_{ij} &=T_{3,iab}T_{3,jab},
+\end{align}
+write $S=q=\EEE[Z\|Z\|^2]$, and set $E=\EEE[ZZ^\top\varepsilon]$ and $P=\EEE[ZZ^\top(W-\tfrac12)\varepsilon]$. For the scalar contractions
+\begin{align}
+G&=\|\gamma\|^2,
+&
+F&=\gamma_i\gamma_jT_{4,ijkk},
+&
+Q&=(\gamma^\top q)^2,
+&
+R&=\gamma^\top L\gamma,
+\\
+A_P&=\gamma_iT_{3,ijk}P_{jk},
+&
+B_P&=(\gamma^\top q)\tr(P),
+&
+C_P&=\gamma^\top Pq,
+\end{align}
+we have
+\begin{equation}
+\label{eq:bern_mse_diff}
+\MSEexp_{\Bern}(\hat{\tau}_\IREG)-\MSEexp_{\Bern}(\hat{\tau}_\REG) = \frac{D_{\Bern}}{n^2}+O(n^{-5/2}),
+\end{equation}
+where
+\begin{equation}
+\label{eq:Dbern}
+D_{\Bern}
+=
+-(2p+7)G
++F-Q-3R
+-16A_P-8B_P+8C_P
++8\tr(E^2)+8S^\top \EEE[Z\varepsilon^2].
+\end{equation}
+\end{theo}
+
+\begin{proof}
+Both REG and IREG contain the regressors $1$, $W$ and $X$. Subtracting any linear combination of these regressors from the outcome changes the fitted coefficient on $W$ by the corresponding amount while leaving the estimation error unchanged, so we may subtract the population main effects and the term $\tau W_i$ and work with the exact representation $Y_i=W_i X_i^\top\{\beta^*_{(1)}-\beta^*_{(0)}\}+\varepsilon_i$. Whitening as in \eqref{eq:whitening} gives the canonical representation $Y_i=W_i\gamma^\top Z_i+\varepsilon_i$, and we write
+\[
+W_i=\tfrac12+\omega_i,
+\qquad
+\omega_i\in\{-\tfrac12,\tfrac12\},
+\qquad
+\EEE[\omega_i]=0,
+\qquad
+\omega_i^2=\tfrac14 .
+\]
+
+Let $V_i$ denote the vector of raw-moment coordinates needed to evaluate the REG or IREG coefficient map, and adopt the notation of Definition \ref{def:msexp}, so that $\htau = g(\bar V)$ and $\tilde\tau_n$ is given by \eqref{eq:hall_expansion}. Let
+\[
+\Sigma^V_{ij}=\Cov(V_i,V_j),
+\qquad
+\mu^V_{3,ijk}=\EEE[(V_i-\mu_i)(V_j-\mu_j)(V_k-\mu_k)]
+\]
+be the covariance and third central-moment tensors of the moment vector. Expanding the square of \eqref{eq:hall_expansion} and using the second- and third-order moments of sample means gives the order-$n^{-1}$ correction to $n\MSEexp$ as $T_1+T_2+T_3$ with
+\begin{equation}
+\label{eq:hall_T1}
+T_1=a_iH_{jk}\mu^V_{3,ijk},
+\end{equation}
+\begin{equation}
+\label{eq:hall_T2_bern}
+T_2 = \frac14 H_{ij}H_{kl}\p{\Sigma^V_{ik}\Sigma^V_{jl}+\Sigma^V_{il}\Sigma^V_{jk}+\Sigma^V_{ij}\Sigma^V_{kl}},
+\end{equation}
+\begin{equation}
+\label{eq:hall_T3_bern}
+T_3 = \frac13 a_iA_{3,jkl}\p{\Sigma^V_{ij}\Sigma^V_{kl}+\Sigma^V_{ik}\Sigma^V_{jl}+\Sigma^V_{il}\Sigma^V_{jk}},
+\end{equation}
+the remaining terms being $O(n^{-3/2})$ in $n\MSEexp$ under Assumption \ref{assu:moments}. The difference between the order-$n^{-2}$ MSE coefficients of REG and IREG is obtained by evaluating these three contractions for the two estimators.
+
+The population Gram matrices and their inverses in the whitened coordinates are
+\[
+A_R=
+\begin{pmatrix}
+1&0&1/2\\
+0&I_p&0\\
+1/2&0&1/2
+\end{pmatrix},
+\quad
+A_R^{-1}=
+\begin{pmatrix}
+2&0&-2\\
+0&I_p&0\\
+-2&0&4
+\end{pmatrix},
+\quad
+A_I=
+\begin{pmatrix}
+1&0&1/2&0\\
+0&I_p&0&I_p/2\\
+1/2&0&1/2&0\\
+0&I_p/2&0&I_p/2
+\end{pmatrix},
+\]
+\[
+A_I^{-1}=
+\begin{pmatrix}
+2&0&-2&0\\
+0&2I_p&0&-2I_p\\
+-2&0&4&0\\
+0&-2I_p&0&4I_p
+\end{pmatrix},
+\qquad
+\theta_R=(0,\gamma/2,0),
+\qquad
+\theta_I=(0,0,0,\gamma).
+\]
+Writing $R=A^{-1}$ and $\theta=Rb$, differentiation of $A\theta=b$ gives the exact derivative identities
+\[
+D\theta[h] = R(db-dA\,\theta),
+\qquad
+D^2\theta[h_1,h_2] = -RdA_1R(db_2-dA_2\theta)-RdA_2R(db_1-dA_1\theta),
+\]
+\[
+D^3\theta[h_1,h_2,h_3] = \sum_{\pi\in S_3} RdA_{\pi_1}RdA_{\pi_2}R(db_{\pi_3}-dA_{\pi_3}\theta).
+\]
+For IREG the additional sample-mean centering functional is differentiated together with the coefficient map, producing the corresponding product-rule terms.
+
+Substituting these derivative tensors and the covariance and third-moment blocks of $V_i$ into \eqref{eq:hall_T1}--\eqref{eq:hall_T3_bern}, and reducing the resulting indexed sums using $\EEE[\omega_i]=0$, $\omega_i^2=1/4$, the four population normal equations for $\varepsilon_i$ and the symmetries of $T_3$ and $T_4$, gives
+\begin{align}
+\Delta T_1 &= 2G+2F+8Z_\gamma, \label{eq:dT1}\\
+\Delta T_2 &= -3G-F-Q-R-8Z_\gamma-8A_P-8B_P, \label{eq:dT2}\\
+\Delta T_3 &= -(2p+6)G-2R-8A_P+8C_P+8\tr(E^2)+8S^\top \EEE[Z\varepsilon^2], \label{eq:dT3}
+\end{align}
+where $Z_\gamma = \EEE[(\gamma^\top Z)\|Z\|^2\omega\varepsilon]$ with $\omega=W-\frac12$. The algebra in \eqref{eq:dT1}--\eqref{eq:dT3} is carried out symbolically: the reference implementation enumerates the full Cartesian products of the expansion directions, applies the derivative tensors above, and reduces the resulting indexed expressions using only tensor symmetries, dummy-index relabeling and the identities implied by $\EEE[ZZ^\top]=I_p$ and $\omega_i^2=1/4$, with the dimension $p$ kept symbolic. The symbolic remainder for each of the three rows is identically zero; the certificate is \texttt{verification/general\_p\_symbolic\_certificate.py} in the replication repository and runs in under a minute.
+
+Summing the three rows, the $Z_\gamma$ terms cancel and \eqref{eq:Dbern} follows.
+\end{proof}
+
+Theorems \ref{theo:crt_reduction} and \ref{theo:bern_deficiency} give
+\begin{equation}
+\label{eq:unsimp}
+D_p = -(2p+3)G+F-Q-3R-16A_P-8B_P+8C_P+8\tr(E^2)+8S^\top \EEE[Z\varepsilon^2],
+\end{equation}
+which Lemma \ref{lemm:matrix} rewrites in the matrix form of Theorem \ref{theo:deficiency}.
+
+\begin{lemm}[Equivalent matrix form]
+\label{lemm:matrix}
+With $K$, $S$, $S_\gamma$, $E$ and $E_W$ as in Theorem \ref{theo:deficiency},
+\[
+G=\|\gamma\|^2,
+\quad
+F=\gamma^\top K\gamma,
+\quad
+Q=(\gamma^\top S)^2,
+\quad
+R=\|S_\gamma\|_F^2,
+\]
+\[
+A_P=\tr(S_\gamma E_W),
+\quad
+B_P=(\gamma^\top S)\tr(E_W),
+\quad
+C_P=\gamma^\top E_WS.
+\]
+\end{lemm}
+
+\begin{proof}
+First, $F=\gamma_i\gamma_jT_{4,ijkl}\delta_{kl}=\gamma^\top\EEE[ZZ^\top\|Z\|^2]\gamma=\gamma^\top K\gamma$, and $S=\EEE[Z_iZ_jZ_j]_{i=1}^p=q$ gives $Q=(\gamma^\top q)^2=(\gamma^\top S)^2$. Next, $(S_\gamma)_{ab}=\EEE[Z_aZ_b(Z^\top\gamma)]=T_{3,abk}\gamma_k$, so
+\[
+\|S_\gamma\|_F^2=\sum_{a,b}(S_\gamma)_{ab}^2=\gamma_k\gamma_\ell T_{3,abk}T_{3,ab\ell}=\gamma_k\gamma_\ell L_{k\ell}=R.
+\]
+Since $S_\gamma$ and $E_W$ are symmetric, $\tr(S_\gamma E_W)=(S_\gamma)_{jk}(E_W)_{jk}=\gamma_iT_{3,ijk}P_{jk}=A_P$; finally $B_P=(\gamma^\top q)\tr(P)=(\gamma^\top S)\tr(E_W)$ and $C_P=\gamma^\top Pq=\gamma^\top E_WS$.
+\end{proof}
+
+We close with an exact identity that is used by the variance-reduced verification of Appendix \ref{sec:numerical-verification} and that underlies Remark \ref{rema:bias}.
+
+\begin{lemm}[Exact difference identity]
+\label{lemm:exact_diff}
+Let $\bar X_w$ and $S_w=\sum_{i:W_i=w}(X_i-\bar X_w)(X_i-\bar X_w)^\top$ denote the within-arm means and scatter matrices, let $\hbeta_w=S_w^{-1}\sum_{i:W_i=w}(X_i-\bar X_w)(Y_i-\bar Y_w)$, and write $\Delta_X=\bar X_1-\bar X_0$. Then, whenever $S_0$, $S_1$ and $S_0+S_1$ are invertible and $n_1=n_0$,
+\[
+\htau_\REG = \bar Y_1-\bar Y_0-\Delta_X^\top (S_1+S_0)^{-1}(S_1\hbeta_1+S_0\hbeta_0),
+\qquad
+\htau_\IREG = \bar Y_1-\bar Y_0-\Delta_X^\top \frac{\hbeta_1+\hbeta_0}{2},
+\]
+and consequently
+\[
+\htau_\IREG-\htau_\REG = \tfrac12\,\Delta_X^\top (S_1+S_0)^{-1}(S_1-S_0)(\hbeta_1-\hbeta_0) = O_P(n^{-1}).
+\]
+\end{lemm}
+
+\begin{proof}
+Both expressions for the estimators are the Frisch--Waugh--Lovell representations of \eqref{eq:estimators}: the coefficient on $X$ in the REG regression is the pooled within-arm slope $(S_1+S_0)^{-1}(S_1\hbeta_1+S_0\hbeta_0)$, and IREG fits the two arms separately, so with $n_1 = n_0$ the overall covariate mean satisfies $\bar X_1 - \bar X = \Delta_X/2 = -(\bar X_0 - \bar X)$. Subtracting,
+\[
+\htau_\IREG-\htau_\REG = \Delta_X^\top\Big[(S_1+S_0)^{-1}(S_1\hbeta_1+S_0\hbeta_0) - \tfrac12(\hbeta_1+\hbeta_0)\Big]
+= \tfrac12\Delta_X^\top(S_1+S_0)^{-1}(S_1-S_0)(\hbeta_1-\hbeta_0).
+\]
+The stochastic order follows from $\Delta_X = O_P(n^{-1/2})$, $(S_1+S_0)^{-1}(S_1-S_0) = O_P(n^{-1/2})$ and $\hbeta_1-\hbeta_0 = O_P(1)$.
+\end{proof}
+
+In whitened coordinates the leading term of this difference is $\tfrac14\Delta_Z^\top(A_1-A_0)\gamma$, with $A_w$ the arm-$w$ mean of $ZZ^\top-I_p$; this is the control variate used in \eqref{eq:cv_identity} below, and taking expectations in Lemma \ref{lemm:exact_diff} and in the corresponding expansion of $\htau_\REG-\tau$ gives the bias expressions of Remark \ref{rema:bias}, which we verify numerically rather than prove.
+
+\section{Numerical verification of Theorem \ref{theo:deficiency}}
+\label{sec:numerical-verification}
+
+The symbolic certificate establishes the algebra of Theorem \ref{theo:bern_deficiency} exactly. The role of simulation is therefore not to re-derive $D_p$ but to provide an independent numerical check that the constant governs the sampling behavior of the estimators: that we expanded the right quantity, that the CRT correction of Theorem \ref{theo:crt_reduction} is right, and that no term was lost in translation. Simulation cannot prove the theorem; we design the checks so that they can fail, and report their power.
+
+\paragraph{Exact targets.}
+The verification uses data-generating processes whose whitened covariates have independent coordinates with known moments and whose oracle residuals take the form $\varepsilon(w)=g_w(Z)+s_w(Z)\eta$, with $\eta$ independent of $Z$ with mean zero and unit variance, $g_w$ a polynomial orthogonal to $(1,Z)$ and $s_w^2$ a polynomial. Every ingredient of $D_p$ is then a finite sum of moments, computed in exact rational arithmetic, so the target carries no Monte Carlo error; the code also verifies $\EEE[g_w]=\EEE[Zg_w]=0$ so that a mis-specified design cannot pass silently. These distributions are chosen for analytic tractability and are deliberately different from the designs of Section \ref{sec:gamma0}. Six are used, so that every block of $D_p$ is active in at least one: Gaussian homoskedastic ($F$ only); centered-exponential covariates with heterogeneity ($F,Q,R$); centered-exponential covariates with heteroskedasticity and $\gamma=0$ (the $8S^\top\EEE[Z\varepsilon^2]$ block alone); centered-exponential covariates with heterogeneity, arm-specific misspecification and arm-specific heteroskedasticity (all nine terms, including $A_P$, $B_P$ and $C_P$); Gaussian covariates with arm-specific misspecification and heteroskedasticity ($\tr(E^2)$ and $E_W$); and a mixed skewed/Gaussian design.
+
+\paragraph{A variance-reduced estimator of $D_p$.}
+The natural estimator $n^2\{\widehat\MSE_\IREG-\widehat\MSE_\REG\}$ is badly behaved: by Lemma \ref{lemm:exact_diff} the difference of the estimators is $O_P(n^{-1})$ while $\htau_\REG-\tau=O_P(n^{-1/2})$, so the per-replication standard deviation of the statistic grows like $\sqrt n$ and confidence intervals become \emph{wider} as $n$ grows at fixed replication count. We therefore subtract an exactly-centered control variate. With $\Delta_Z=\bar Z_1-\bar Z_0$, $A_w$ the arm-$w$ mean of $ZZ^\top - I_p$, and
+\[
+d_1=\tfrac14\Delta_Z^\top(A_1-A_0)\gamma,
+\qquad
+L=\gamma^\top\bar Z+\bar\varepsilon_1-\bar\varepsilon_0,
+\]
+the expectation of a product of three centered IID sample means over an arm of size $m=n/2$ equals the corresponding third cumulant divided by $m^2$, which gives the exact finite-$n$ identity
+\begin{equation}
+\label{eq:cv_identity}
+\EEE[d_1 L]
+=
+\frac{1}{n^2}\,
+\EEE\Big[\big(\|Z\|^2-1\big)\,(\gamma^\top Z)\,\big(\gamma^\top Z+\varepsilon(1)-\varepsilon(0)\big)\Big].
+\end{equation}
+The estimator
+\[
+\hat D_p
+=
+\frac1B\sum_{b=1}^B\Big[n^2\big(e_{\IREG,b}^2-e_{\REG,b}^2\big)-2n^2d_{1,b}L_b\Big]
++
+2n^2\,\EEE[d_1L]
+\]
+is unbiased for the same quantity as the raw statistic, with per-replication variance $O(1)$ rather than $O(n)$. Both are reported by the replication code: in the Gaussian design the raw per-replication standard deviation grows from $151$ at $n=200$ to $293$ at $n=800$, while the control-variate standard deviation is $56$ and $55$; at $n=3200$ the control-variate standard error is ten times smaller than the raw one.
+
+\paragraph{Results.}
+Table \ref{tab:validation} reports the exact targets and the control-variate estimates at $n\in\{200,800,3200\}$, with $B=400{,}000$ replications at the two smaller sample sizes and $B=120{,}000$ at the largest. Because the control-variate estimator has per-replication standard deviation of order one, it resolves the finite-$n$ remainder: at $n=200$ several designs lie many standard errors from their targets, up to $22$ in the design with all blocks active. These deviations shrink as $n$ grows; in that design the gap to the target falls from $12.1$ to $5.7$ to $2.6$ as $n$ quadruples twice. At $n=3200$ every estimate is within $2.6$ standard errors of its target. The two largest deviations are $-2.6$ in the all-blocks design, whose trajectory is still approaching the target from below, and $+2.3$ in the $\gamma=0$ heteroskedastic design, which lies below its target at $n=200$ and $n=800$ and above it at $n=3200$; with six designs, a deviation of this size is unremarkable under Monte Carlo error. The deviations are consistent with a remainder that vanishes relative to $n^{-2}$ in the untrimmed MSE difference, but with three sample sizes we do not attempt to estimate its rate.
+
+\begin{table}[htbp]
+\centering
+\caption{Verification of Theorem \ref{theo:deficiency}. Targets are exact; estimates are the control-variate estimator with Monte Carlo standard errors in parentheses. $B=400{,}000$ for $n\in\{200,800\}$ and $B=120{,}000$ for $n=3200$.}
+\label{tab:validation}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+DGP (active blocks) & $D_p$ (exact) & $n=200$ & $n=800$ & $n=3200$ \\
+\midrule
+\tablebody{tables/validation_body.tex}
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Power: what the verification would reject.}
+A check that cannot fail is not evidence. Table \ref{tab:ablation} reports $z$-statistics of the $n=3200$ estimates against deliberately perturbed versions of the formula: the Bernoulli constant $D_\Bern=D_p-4G$ (that is, omitting Theorem \ref{theo:crt_reduction}), the Gaussian special case $-(p+1)G$, and $D_p$ with individual blocks deleted. The constant of Theorem \ref{theo:deficiency} has $|z|\leq 2.6$ in every design, while each alternative has $|z|>3$ in at least one design, in several cases by tens of standard errors. The check has limited power against alternatives that differ from $D_p$ by less than the residual finite-$n$ bias: in the all-blocks design, for example, $D_\Bern = D_p - 3.2$ is not separated from $D_p$ at $n=3200$, which is why several designs are needed. A conventional Monte Carlo design without the control variate would have standard errors of $2$--$12$ on these quantities and could not separate most of the alternatives.
+
+\begin{table}[htbp]
+\centering
+\caption{Ablation: $z=(\hat D_p - D^{\mathrm{alt}})/\widehat{SE}$ at $n=3200$ for each design and each candidate constant. Values with $|z|>3$ indicate rejection of that candidate.}
+\label{tab:ablation}
+\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+DGP & $D_p$ & $D_p-4G$ & $-(p+1)G$ & drop $-3R$ & drop $-Q$ & drop resid.\ & drop $E_W$ \\
+\midrule
+\tablebody{tables/ablation_body.tex}
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{The CRT correction and the bias decomposition.}
+Theorem \ref{theo:crt_reduction} is checked separately by estimating the $n^{-2}$ constant under both the balanced CRT and Bernoulli$(1/2)$ assignment on the same designs (\texttt{verification/crt\_correction\_certificate.py}): the estimated gap between the two designs is $4.3\pm0.6$ at $n=200$ and $6.3\pm1.6$ at $n=800$ in the Gaussian design, and $3.0\pm1.1$ and $8.6\pm3.0$ in the exponential-covariate design, against the predicted $4G=5$ in both, with all four $|z|<2$. This check uses the raw statistic, because the control variate is derived for the two-independent-samples representation of the CRT, so its power is modest; the ablation in Table \ref{tab:ablation}, which rejects $D_\Bern$ by up to thirty standard errors, is the sharper test. Remark \ref{rema:bias} is checked by estimating the biases of both estimators directly (\texttt{simulations/run\_bias.py}): with $10^6$ replications, at $n=800$ all six estimated biases (REG and IREG in three designs) are within $0.8$ Monte Carlo standard errors of the leading-order predictions; at $n=200$ the all-blocks design deviates by about $11\%$ of the predicted REG bias ($z=9.3$), a gap that has disappeared at $n=800$ ($z=0.4$), as expected of an $O(n^{-3/2})$ remainder.
+
+\section{Range of validity of the second-order approximation}
+\label{sec:validity}
+
+Theorem \ref{theo:deficiency} describes the limit $n\to\infty$; separately from whether $D_p$ is correct, one should ask when $1+\Delta/n$ is a usable approximation to the finite-sample MSE ratio. Because $\Delta$ is driven by third and fourth moments of the whitened covariates, and those same moments control the size of the neglected terms, the two questions are linked. Table \ref{tab:validity} makes the trade-off explicit in the scalar lognormal family of the introduction, with $\sigma(X)=1+X$ and treatment-effect slope $0.4$ held fixed and only the log-scale $s$ of $X\sim\mathrm{LogNormal}(0,s^2)$ varying.
+
+\begin{table}[htbp]
+\centering
+\caption{Simulated MSE ratio $\widehat\MSE_\IREG/\widehat\MSE_\REG$ versus the second-order prediction $1+\Delta/n$, for $X\sim\mathrm{LogNormal}(0,s^2)$, $\sigma(X)=1+X$, treatment-effect slope $0.4$. Monte Carlo standard errors of the simulated ratios are given in parentheses in units of the last reported digit. This family has $\sigma(X)=1+X$; the introductory example ($\sigma(X)=1+2X$) and its heavy-tailed variant ($\sigma(X)=1+1.5X$, slope $0.3$) are separate designs.}
+\label{tab:validity}
+\small
+\begin{tabular}{rrrrrrrrr}
+\toprule
+ & & & \multicolumn{2}{c}{$n=500$} & \multicolumn{2}{c}{$n=2000$} & \multicolumn{2}{c}{$n=8000$} \\
+$s$ & skew $Z$ & $\Delta$ & sim. & pred. & sim. & pred. & sim. & pred. \\
+\midrule
+\tablebody{tables/validity_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+Within this family, for $s=0.8$ (skewness $3.7$) the simulated excess MSE is \gz{valid:s0.8:n500:frac}\% of the predicted excess $\Delta/n$ at $n=500$ and \gz{valid:s0.8:n2000:frac}\% at $n=2{,}000$ (for $s=0.6$, \gz{valid:s0.6:n500:frac}\% and \gz{valid:s0.6:n2000:frac}\%); the prediction progressively overstates the gap as the tail becomes heavier; at $s=1.5$ the predicted ratio exceeds the simulated one by a factor of four at $n=500$. We do not claim that this boundary transfers to other families of distributions. In the heavy-tailed variant of the introductory example ($s=1.8$, $\sigma(X)=1+1.5X$, slope $0.3$), $\Delta\approx 3.9\times 10^4$ and $1+\Delta/n$ exceeds the simulated ratio by a factor of more than forty at $n=500$: the ordering is right and REG's advantage is real (the simulated MSE ratio is $1.68$ at $n=500$, $1.34$ at $n=2{,}000$ and $1.19$ at $n=8{,}000$, against predictions of $78.5$, $20.4$ and $5.8$), but the deficiency is no longer a useful numerical summary. That regime is also where HC1 intervals fail for IREG: in this design ($R^2_\tau\approx0.009$), IREG+HC1 covers $\tau$ in $85.6\%$ of replications, IREG+HC2 in $88.9\%$ and IREG+HC3 in $94.0\%$, against $94.4\%$ for REG+HC1 and $96.7\%$ for REG+HC3.
+
+\paragraph{Tail sensitivity.} In the heaviest designs the deficiency is dominated by covariate values far in the tail. Table \ref{tab:tail} recomputes $1+\Delta/n$ at $n=500$ after truncating the lognormal law at a high quantile, for which the moments entering $\Delta$ have closed forms. Truncation at the $1-10^{-4}$ quantile already reduces $\Delta$ by one to three orders of magnitude and brings $1+\Delta/n$ to the same order of magnitude as the simulated ratio. The simulations draw between $10^7$ and $5\times10^7$ covariate values, so values beyond the $1-10^{-8}$ quantile rarely occur, while the simulated MSE is itself an average dominated by rare draws. In these designs the finite-sample MSE gap is therefore difficult to estimate precisely, and the discrepancy between it and the full-moment prediction reflects both the approximation and tail undersampling; we do not separate the two. The sign of the comparison agrees in every design.
+
+\begin{table}[htbp]
+\centering
+\caption{Second-order prediction $1+\Delta/n$ at $n=500$ for the full lognormal law and for its truncation at the $q$ quantile, against the simulated MSE ratio.}
+\label{tab:tail}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+& Simulated & \multicolumn{4}{c}{$1+\Delta/n$} \\
+Design & ratio & full law & $q=1-10^{-4}$ & $q=1-10^{-6}$ & $q=1-10^{-8}$ \\
+\midrule
+\tablebody{tables/tail_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Implementation and validation of the inference simulations}
+\label{sec:r-validation}
+
+The simulations of Section \ref{sec:feasible} are implemented in R (\texttt{r/gamma0\_sim.R}). For each replication, the design matrices are built exactly as \texttt{lm\_robust(y \textasciitilde{} w + x)} and \texttt{lm\_lin(y \textasciitilde{} w, covariates = \textasciitilde{} x)} build them, and the fits are computed by \texttt{estimatr}'s own fitting routine, the function those two interfaces call; intervals use the degrees of freedom \texttt{estimatr} reports. The main runs use \texttt{estimatr} \gz{estimatr:v1}; the rare-value design is repeated with \texttt{estimatr} \gz{estimatr:v2}. The validation script \texttt{r/validate\_estimatr.R} and the Python cross-check \texttt{simulations/crosscheck\_r.py} establish the following, under both versions.
+\begin{itemize}
+\item On \gz{val:datasets} simulated datasets from four designs, the formula interfaces \texttt{lm\_robust} and \texttt{lm\_lin} and the simulation engine give identical estimates, HC1--HC3 standard errors and degrees of freedom (largest relative difference \gz{val:formulagap}), and a base-R matrix implementation of OLS, leverage and HC1--HC3 agrees to \gz{val:handgap}.
+\item On \gz{val:crossn} exported datasets, independent Python implementations (NumPy and \texttt{statsmodels}) reproduce the estimates, standard errors, degrees of freedom, confidence limits and leverages to \gz{val:crossgap}.
+\item With $p=1$, the estimates agree with the closed-form within-arm expressions of Lemma \ref{lemm:exact_diff} to \gz{val:p1gap}.
+\item When $\gamma=0$, every unit's generated treatment effect equals $\tau$ up to rounding, so the sample and population ATEs coincide.
+\item In a rare-value dataset in which the treated arm contains a single rare unit, that unit has $1-H_{ii}=\gz{val:lev:onem}$ and residual of absolute value \gz{val:lev:resid}. Setting its HC3 contribution to zero gives a standard error of \gz{val:lev:hcthree:zero}; \texttt{estimatr} \gz{estimatr:v2} returns \gz{val:lev:hcthree:v2} with a warning, and \texttt{estimatr} \gz{estimatr:v1} returns \gz{val:lev:hcthree:v1}, determined by rounding error in the $0/0$ ratio.
+\end{itemize}
+
+
+
+\paragraph{Leverage-one handling.} \texttt{estimatr} \gz{estimatr:v1}, used for all main results, evaluates the $0/0$ HC2/HC3 contribution of a leverage-one observation in floating point: HC2 is frequently undefined, because the computed $1-H_{ii}$ can be slightly negative (no interval in \gz{rare_q0.02_prop:IREG_HC2:lev1:nointerval}\% of the leverage-one replications of the rare-value design with $\sigma=1+|X_{i1}|$), and HC3 receives a rounding-determined contribution, so its \gz{rare_q0.02_prop:IREG_HC3:lev1}\% coverage there does not reflect a valid variance estimate. The development version of \texttt{estimatr} on GitHub (DESCRIPTION version \gz{estimatr:v2}, commit \texttt{e70f3ee}; we do not claim that it corresponds to a CRAN release) drops the contribution of an observation whose computed leverage is at or above one and warns, but one computed just below one still contributes a rounding-determined term; under it IREG+HC3 covers \gz{rare_q0.02_prop@v2:IREG_HC3:lev1}\% and IREG+HC2 \gz{rare_q0.02_prop@v2:IREG_HC2:lev1}\% of those replications.
+
+\section{The superpopulation correction: a calibration diagnostic}
+\label{sec:correction}
+
+This appendix separates the two quantities discussed in Section \ref{sec:estimand}: the true first-order component $G/n$ and its plug-in estimate $\hdelta^\top\hat\Sigma_X\hdelta/n$. On each simulated dataset we form five intervals for the population ATE from the same IREG estimate and the same degrees of freedom: HC1; HC1 plus the plug-in, as in \eqref{eq:vsp}; HC1 plus the true $G/n$ (an oracle, infeasible in practice); HC3; and HC3 plus the plug-in. Only the $t$ critical value changes with the nominal level. When $G=0$ the oracle interval coincides with the uncorrected one by construction.
+
+Section \ref{sec:estimand} also uses the Gaussian designs of the correction study: $X_i\sim N(0,I_p)$, $Y_i(0)=0.9\sum_jX_{ij}+\varepsilon_i(0)$ and $Y_i(1)=Y_i(0)-\varepsilon_i(0)+\varepsilon_i(1)+1+0.3X_{i1}$ with $N(0,1)$ residuals that are either shared or independent across arms, at $n=500$, $p=5$ and $n=1000$, $p\in\{2,5,10\}$. The calibration diagnostic uses three designs, all with $n=500$. \emph{Large $R^2_\tau$}: $p=5$, $X_i\sim N(0,\Sigma)$ with $\Sigma_{jk}=0.5^{|j-k|}$, $Y_i(0)=0.9\sum_jX_{ij}+\varepsilon_i$ and $Y_i(1)=Y_i(0)+1+3X_{i1}$ with $\varepsilon_i\sim N(0,1)$, so that $G=9$ and $R^2_\tau=9/13$; \gz{corr:large_hte_n500_p5:reps} replications. \emph{Small $R^2_\tau$}: the heavy-tailed variant of the introductory example ($X\sim\mathrm{LogNormal}(0,1.8^2)$, $\sigma(X)=1+1.5X$, treatment-effect slope $0.3$); \gz{corr:heavy_tail_example:reps} replications. \emph{$\gamma=0$}: the design of Table \ref{tab:gamma0-skew} with $s=2$; \gz{corr:lognormal_s2.0_prop:reps} replications. The first design was simulated with the NumPy implementation of Appendix \ref{sec:r-validation}, the second with the implementation used for the introductory example, and the third with \texttt{estimatr} \gz{estimatr:v1}. Monte Carlo standard errors are at most \gz{corr:mcse:max} percentage points.
+
+Table \ref{tab:correction95} summarizes the $95\%$ intervals. Its last column is the median over replications of the ratio of the width of the HC1-plus-plug-in interval to that of the HC1 interval; it measures how much the feasible correction lengthens a typical interval. Table \ref{tab:calibration} and Figure \ref{fig:calibration} report coverage at nominal levels from $80\%$ to $99\%$.
+
+\begin{table}[htbp]
+\centering
+\caption{Coverage (\%) of nominal $95\%$ intervals for the population ATE, and the median ratio of interval widths (HC1 plus plug-in over HC1).}
+\label{tab:correction95}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrcccc}
+\toprule
+& & & HC1 + & HC1 + $G/n$ & Median width \\
+Design & $R^2_\tau$ & HC1 & plug-in & (oracle) & ratio \\
+\midrule
+\tablebody{tables/correction95_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Coverage (\%) of intervals for the population ATE at several nominal levels. ``Plug-in'' adds $\hdelta^\top\hat\Sigma_X\hdelta/n$ to the robust variance; ``$G/n$ (oracle)'' adds the true first-order component.}
+\label{tab:calibration}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Method & $80\%$ & $90\%$ & $95\%$ & $98\%$ & $99\%$ \\
+\midrule
+\tablebody{tables/calibration_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/calibration.pdf}
+\caption{Empirical against nominal coverage for IREG with HC1, HC1 plus the plug-in correction, and HC1 plus the true $G/n$, in the three designs of Table \ref{tab:calibration}. The grey line is the diagonal. With $\gamma=0$ (left) the oracle coincides with HC1.}
+\label{fig:calibration}
+\end{figure}
+
+Tables \ref{tab:correction95} and \ref{tab:calibration} and Figure \ref{fig:calibration} show three regimes. With large $R^2_\tau$ the plug-in averages \gz{corr:large_hte_n500_p5:ratio} times $G/n$, and the feasible and oracle intervals are close to nominal at every level (for example \gz{corr:large_hte_n500_p5:IREG_HC1c:0.80}\% and \gz{corr:large_hte_n500_p5:IREG_HC1o:0.80}\% at $80\%$, \gz{corr:large_hte_n500_p5:IREG_HC1c:0.99}\% and \gz{corr:large_hte_n500_p5:IREG_HC1o:0.99}\% at $99\%$), while HC1 alone undercovers at every level. The median width ratio of \gz{corr:large_hte_n500_p5:wr} is what adding a genuinely large variance component requires. In the small-$R^2_\tau$ example the oracle moves HC1 coverage by about a point, whereas the plug-in, whose average is \gz{corr:heavy_tail_example:ratio} times $G/n$, moves it by five to ten points depending on the level; with $\gamma=0$ the oracle changes nothing and the plug-in again moves coverage substantially. In these two designs the median width ratio is only \gz{corr:heavy_tail_example:wr} and \gz{corr:lognormal_s2.0_prop:wr}: a modest typical lengthening produces large changes in coverage because the HC1 interval itself is badly miscalibrated and the lengthening is concentrated where HC1 fails. With $\gamma=0$ the median width ratio is \gz{corr:lognormal_s2.0_prop:wr_miss} in replications where the HC1 interval misses and \gz{corr:lognormal_s2.0_prop:wr_cover} where it covers, whereas with large $R^2_\tau$ the lengthening is nearly uniform (\gz{corr:large_hte_n500_p5:wr_miss} and \gz{corr:large_hte_n500_p5:wr_cover}), as expected when a genuine variance component is added. Width alone therefore does not establish that an interval is valid or invalid. Across nominal levels the plug-in interval is miscalibrated in these two designs: it undercovers at $80\%$ (\gz{corr:heavy_tail_example:IREG_HC1c:0.80}\% and \gz{corr:lognormal_s2.0_prop:IREG_HC1c:0.80}\%) and slightly overcovers at $99\%$ (\gz{corr:heavy_tail_example:IREG_HC1c:0.99}\% and \gz{corr:lognormal_s2.0_prop:IREG_HC1c:0.99}\%), so its agreement with nominal at $95\%$ is a crossing point rather than evidence of a calibrated procedure. Here HC3 by itself is within about a point of nominal at every level, and combined with HC3 the plug-in overcovers at every level (\gz{corr:lognormal_s2.0_prop:IREG_HC3c:0.80}\% at $80\%$ with $\gamma=0$). Because $G=0$ in the last design, all of its effect there comes from the upward bias of the plug-in described in Section \ref{sec:estimand}, not from the estimand-level component. Results at $95\%$ for the 20 designs of this paper and 19 supplementary designs are in \texttt{results/correction\_summary.csv}.
+
+\end{document}

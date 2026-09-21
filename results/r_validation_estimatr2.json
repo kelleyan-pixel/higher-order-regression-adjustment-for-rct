@@ -1,0 +1,30 @@
+{
+  "estimatr_version": "2.0.0",
+  "R_version": "R version 4.3.3 (2024-02-29)",
+  "formula_vs_engine_max_rel_gap": 0,
+  "hand_vs_estimatr_max_rel_gap": 2.69784194983913e-14,
+  "datasets_checked": 100,
+  "gamma0": {
+    "population_G": 0,
+    "max_abs_ite_minus_tau": 1.77635683940025e-15,
+    "sate_minus_pate": 0,
+    "plugin_deltaSigmadelta_over_n": 0.00758680590307464
+  },
+  "p1_closed_form_max_rel_gap": 7.99491821393571e-16,
+  "leverage_one": {
+    "unit": 444,
+    "leverage": 1,
+    "one_minus_leverage": 1.11022302462516e-16,
+    "residual": -1.4210854715202e-14,
+    "estimatr_se": {
+      "HC1": 0.126780447067226,
+      "HC2": 0.12895568523226,
+      "HC3": 0.131930933334486
+    },
+    "se_with_unit_contribution_zeroed": {
+      "HC2": 0.12895568523226,
+      "HC3": 0.131930933334485
+    },
+    "estimatr_warnings": ["1 observation has a computed leverage at or near 1, which happens when the design is close to saturated and the observation is fitted exactly or nearly so. `se_type = \"HC2\"` divides by (1 - leverage). An observation at or above leverage 1 is dropped from the variance rather than divided by a negative number, and one just below it contributes a term the small divisor inflates. Use `se_type = \"HC1\"` or `\"classical\"`, or drop covariates, to use every observation.", "1 observation has a computed leverage at or near 1, which happens when the design is close to saturated and the observation is fitted exactly or nearly so. `se_type = \"HC3\"` divides by (1 - leverage). An observation at or above leverage 1 is dropped from the variance rather than divided by a negative number, and one just below it contributes a term the small divisor inflates. Use `se_type = \"HC1\"` or `\"classical\"`, or drop covariates, to use every observation."]
+  }
+}

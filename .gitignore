@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.Rlib/
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.blg
+paper/*.bbl
+results/correction/r_*.json
+
+arxiv_upload.tar.gz

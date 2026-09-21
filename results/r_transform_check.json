@@ -1,0 +1,62 @@
+{
+  "design": {
+    "name": "lognormal_s2.0_prop",
+    "x": "lognormal",
+    "s": 2,
+    "het": "prop",
+    "mis": "none",
+    "p": 1,
+    "n": 500,
+    "reps": 20000,
+    "q": null
+  },
+  "seed": 20261928,
+  "estimatr_version": "1.0.2",
+  "reps": 20000,
+  "X": {
+    "median_max_leverage_IREG": 0.648404148874447,
+    "REG_HC1": {
+      "coverage": 0.95305,
+      "mcse": 0.0014957556200797,
+      "median_width": 6.80166654453824
+    },
+    "REG_HC3": {
+      "coverage": 0.9787,
+      "mcse": 0.00102093853879653,
+      "median_width": 7.56585006852634
+    },
+    "IREG_HC1": {
+      "coverage": 0.8297,
+      "mcse": 0.00265798711434047,
+      "median_width": 6.86892178931833
+    },
+    "IREG_HC3": {
+      "coverage": 0.9386,
+      "mcse": 0.0016974987481586,
+      "median_width": 9.14487926153295
+    }
+  },
+  "log1pX": {
+    "median_max_leverage_IREG": 0.0838271872138891,
+    "REG_HC1": {
+      "coverage": 0.96715,
+      "mcse": 0.00126037449791719,
+      "median_width": 9.91854674993376
+    },
+    "REG_HC3": {
+      "coverage": 0.9723,
+      "mcse": 0.00116044625037095,
+      "median_width": 10.2100480886139
+    },
+    "IREG_HC1": {
+      "coverage": 0.95615,
+      "mcse": 0.00144788082209828,
+      "median_width": 9.91859685793967
+    },
+    "IREG_HC3": {
+      "coverage": 0.9677,
+      "mcse": 0.00125013419279692,
+      "median_width": 10.482213278198
+    }
+  }
+}

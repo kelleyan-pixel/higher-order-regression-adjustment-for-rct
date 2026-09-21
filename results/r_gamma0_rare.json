@@ -1,0 +1,284 @@
+{
+  "rare_q0.02_prop": {
+    "design": {
+      "name": "rare_q0.02_prop",
+      "x": "rare",
+      "s": null,
+      "het": "prop",
+      "mis": "none",
+      "p": 1,
+      "n": 500,
+      "reps": 20000,
+      "q": 0.02
+    },
+    "reps": 20000,
+    "frac_rank_deficient_IREG": 0.01365,
+    "frac_no_interval_IREG": 0.00205,
+    "frac_leverage_one_IREG": 0.06125,
+    "median_max_leverage_IREG": 0.250000000000001,
+    "max_abs_ite_minus_tau": 3.5527136788005e-15,
+    "estimatr_version": "1.0.2",
+    "REG_HC1": {
+      "all": {
+        "coverage": 0.9491,
+        "mcse": 0.00155417486146186,
+        "n": 20000,
+        "frac_no_interval": 0
+      },
+      "full_rank": {
+        "coverage": 0.948953211334719,
+        "mcse": 0.00156702559694647,
+        "n": 19727,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.956734693877551,
+        "mcse": 0.00581296365514042,
+        "n": 1225,
+        "frac_no_interval": 0
+      }
+    },
+    "REG_HC2": {
+      "all": {
+        "coverage": 0.9536,
+        "mcse": 0.00148739772757659,
+        "n": 20000,
+        "frac_no_interval": 0.0001
+      },
+      "full_rank": {
+        "coverage": 0.953616870279313,
+        "mcse": 0.00149739529850398,
+        "n": 19727,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.959183673469388,
+        "mcse": 0.00565327097074791,
+        "n": 1225,
+        "frac_no_interval": 0
+      }
+    },
+    "REG_HC3": {
+      "all": {
+        "coverage": 0.95975,
+        "mcse": 0.0013897830316276,
+        "n": 20000,
+        "frac_no_interval": 0
+      },
+      "full_rank": {
+        "coverage": 0.959750595630354,
+        "mcse": 0.00139935660428028,
+        "n": 19727,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.965714285714286,
+        "mcse": 0.00519891700509082,
+        "n": 1225,
+        "frac_no_interval": 0
+      }
+    },
+    "IREG_HC1": {
+      "all": {
+        "coverage": 0.9201,
+        "mcse": 0.00191723746573031,
+        "n": 20000,
+        "frac_no_interval": 0.00275
+      },
+      "full_rank": {
+        "coverage": 0.922238556293405,
+        "mcse": 0.0019066600752451,
+        "n": 19727,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.856326530612245,
+        "mcse": 0.0100216664703191,
+        "n": 1225,
+        "frac_no_interval": 0
+      }
+    },
+    "IREG_HC2": {
+      "all": {
+        "coverage": 0.90145,
+        "mcse": 0.0021075803365471,
+        "n": 20000,
+        "frac_no_interval": 0.03715
+      },
+      "full_rank": {
+        "coverage": 0.904901911086328,
+        "mcse": 0.00208860409493382,
+        "n": 19727,
+        "frac_no_interval": 0.033304607897805
+      },
+      "leverage_one": {
+        "coverage": 0.402448979591837,
+        "mcse": 0.0140111849902309,
+        "n": 1225,
+        "frac_no_interval": 0.536326530612245
+      }
+    },
+    "IREG_HC3": {
+      "all": {
+        "coverage": 0.9476,
+        "mcse": 0.00157566240038912,
+        "n": 20000,
+        "frac_no_interval": 0.00205
+      },
+      "full_rank": {
+        "coverage": 0.951234348861966,
+        "mcse": 0.00153345223745048,
+        "n": 19727,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.948571428571429,
+        "mcse": 0.0063105789681919,
+        "n": 1225,
+        "frac_no_interval": 0
+      }
+    },
+    "seed": 20265922
+  },
+  "rare_q0.02_homo": {
+    "design": {
+      "name": "rare_q0.02_homo",
+      "x": "rare",
+      "s": null,
+      "het": "none",
+      "mis": "none",
+      "p": 1,
+      "n": 500,
+      "reps": 20000,
+      "q": 0.02
+    },
+    "reps": 20000,
+    "frac_rank_deficient_IREG": 0.0129,
+    "frac_no_interval_IREG": 0.0023,
+    "frac_leverage_one_IREG": 0.06645,
+    "median_max_leverage_IREG": 0.250000000000001,
+    "max_abs_ite_minus_tau": 8.88178419700125e-16,
+    "estimatr_version": "1.0.2",
+    "REG_HC1": {
+      "all": {
+        "coverage": 0.9495,
+        "mcse": 0.00154838222025442,
+        "n": 20000,
+        "frac_no_interval": 0
+      },
+      "full_rank": {
+        "coverage": 0.949295917333604,
+        "mcse": 0.00156144502291514,
+        "n": 19742,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.957863054928518,
+        "mcse": 0.00551087733012848,
+        "n": 1329,
+        "frac_no_interval": 0
+      }
+    },
+    "REG_HC2": {
+      "all": {
+        "coverage": 0.9492,
+        "mcse": 0.00155272921013292,
+        "n": 20000,
+        "frac_no_interval": 0.00025
+      },
+      "full_rank": {
+        "coverage": 0.949245263904366,
+        "mcse": 0.0015621830909011,
+        "n": 19742,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.957863054928518,
+        "mcse": 0.00551087733012848,
+        "n": 1329,
+        "frac_no_interval": 0
+      }
+    },
+    "REG_HC3": {
+      "all": {
+        "coverage": 0.95025,
+        "mcse": 0.00153744816985809,
+        "n": 20000,
+        "frac_no_interval": 0
+      },
+      "full_rank": {
+        "coverage": 0.950055718772161,
+        "mcse": 0.00155032177928094,
+        "n": 19742,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.958615500376223,
+        "mcse": 0.00546359611236566,
+        "n": 1329,
+        "frac_no_interval": 0
+      }
+    },
+    "IREG_HC1": {
+      "all": {
+        "coverage": 0.9467,
+        "mcse": 0.0015883814088562,
+        "n": 20000,
+        "frac_no_interval": 0.0025
+      },
+      "full_rank": {
+        "coverage": 0.948991996758181,
+        "mcse": 0.00156586696756155,
+        "n": 19742,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.957110609480813,
+        "mcse": 0.00555767967645354,
+        "n": 1329,
+        "frac_no_interval": 0
+      }
+    },
+    "IREG_HC2": {
+      "all": {
+        "coverage": 0.90855,
+        "mcse": 0.00203822100739836,
+        "n": 20000,
+        "frac_no_interval": 0.0421
+      },
+      "full_rank": {
+        "coverage": 0.912420220848951,
+        "mcse": 0.00201188799775615,
+        "n": 19742,
+        "frac_no_interval": 0.0379900719278695
+      },
+      "leverage_one": {
+        "coverage": 0.413092550790068,
+        "mcse": 0.0135065988741279,
+        "n": 1329,
+        "frac_no_interval": 0.564334085778781
+      }
+    },
+    "IREG_HC3": {
+      "all": {
+        "coverage": 0.94735,
+        "mcse": 0.00157920830639913,
+        "n": 20000,
+        "frac_no_interval": 0.0023
+      },
+      "full_rank": {
+        "coverage": 0.951524668220038,
+        "mcse": 0.00152853309834014,
+        "n": 19742,
+        "frac_no_interval": 0
+      },
+      "leverage_one": {
+        "coverage": 0.975921745673439,
+        "mcse": 0.0042049177554004,
+        "n": 1329,
+        "frac_no_interval": 0
+      }
+    },
+    "seed": 20265923
+  }
+}

@@ -1,0 +1,6 @@
+# Tested with Python 3.12.3 on Linux (see results/env.json for the exact run environment).
+numpy==2.4.4
+scipy==1.17.1
+sympy==1.14.0
+statsmodels==0.15.0
+matplotlib==3.10.8
