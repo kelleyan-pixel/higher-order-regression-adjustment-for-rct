@@ -7,8 +7,8 @@
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
      21322  paper/figures/calibration.pdf
-    556881  paper/main.pdf
-    116118  paper/main.tex
+    557135  paper/main.pdf
+    116311  paper/main.tex
      10797  paper/references.bib
        672  paper/tables/ablation_body.tex
       1249  paper/tables/calibration_body.tex
