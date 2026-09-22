@@ -1,4 +1,4 @@
-"""Introductory example and range-of-validity sweep (paper Section 1 and Table 9).
+"""Introductory example and range-of-validity sweep (paper Section 1 and Table 8).
 
 Scalar DGP:
     X  ~ LogNormal(0, sx^2)            (raw, uncentred: the estimators are

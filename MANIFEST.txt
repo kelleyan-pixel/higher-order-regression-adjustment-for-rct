@@ -1,8 +1,8 @@
-# Files in this release (167 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
+# Files in this release (166 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
        135  .gitignore
-       510  CITATION.cff
+       511  CITATION.cff
       1085  LICENSE
-      7429  README.md
+      7531  README.md
       3820  VERIFICATION.md
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
@@ -10,8 +10,8 @@
      19358  paper/figures/hte_coverage.pdf
      23814  paper/figures/validation_rates.pdf
      22211  paper/figures/validation_z.pdf
-    651088  paper/main.pdf
-    124662  paper/main.tex
+    656781  paper/main.pdf
+    113075  paper/main.tex
      10797  paper/references.bib
        672  paper/tables/ablation_body.tex
       1249  paper/tables/calibration_body.tex
@@ -20,21 +20,20 @@
        646  paper/tables/gamma0_rare_body.tex
     145230  paper/tables/gamma0_values.tex
        441  paper/tables/gamma0_width_body.tex
-      1530  paper/tables/hte_battery_body.tex
+      1659  paper/tables/hte_battery_body.tex
        756  paper/tables/hte_battery_supp_body.tex
        724  paper/tables/hte_calibration_body.tex
        469  paper/tables/hte_sweep_body.tex
-       634  paper/tables/null_main_body.tex
+       601  paper/tables/null_main_body.tex
        528  paper/tables/sampling_body.tex
-       831  paper/tables/scale_body.tex
        239  paper/tables/tail_body.tex
        668  paper/tables/validation_body.tex
        811  paper/tables/validation_families_body.tex
        444  paper/tables/validity_body.tex
       2962  r/common.R
-      3302  r/correction_sim.R
+      3299  r/correction_sim.R
       5345  r/gamma0_sim.R
-       989  r/install_estimatr2.sh
+       990  r/install_estimatr2.sh
       2873  r/transform_check.R
       8308  r/validate_estimatr.R
      14792  reference/supplementary_designs/table1.json
@@ -89,7 +88,7 @@
       1122  results/crt_correction.json
        189  results/env.json
       4753  results/example.json
-     31990  results/hte_battery.json
+     32973  results/hte_battery.json
       8118  results/hte_sweep.json
        303  results/r_crosscheck.json
       7658  results/r_datasets/gauss_misspec_01.csv
@@ -146,7 +145,7 @@
       3259  run_all.sh
        951  run_correction_study.sh
       1168  simulations/check_determinism.py
-     20852  simulations/check_prose_numbers.py
+     22258  simulations/check_prose_numbers.py
       8070  simulations/correction_common.py
      12565  simulations/correction_python.py
       9936  simulations/correction_summarize.py
@@ -156,8 +155,8 @@
        756  simulations/env_report.py
       3263  simulations/formula.py
       1448  simulations/hc.py
-      6267  simulations/hte_designs.py
-     37278  simulations/make_tables.py
+      6340  simulations/hte_designs.py
+     36910  simulations/make_tables.py
       2016  simulations/run_ablation.py
       2732  simulations/run_bias.py
       7770  simulations/run_example.py

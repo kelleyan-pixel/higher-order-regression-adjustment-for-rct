@@ -1,4 +1,4 @@
-"""Control-variate verification of Theorem 2 (paper Table 7).
+"""Control-variate verification of Theorem 2 (paper Table 5).
 
 For each DGP in dgps.py the target D_p is computed exactly (formula.py) and
 compared with the control-variate Monte-Carlo estimator described in

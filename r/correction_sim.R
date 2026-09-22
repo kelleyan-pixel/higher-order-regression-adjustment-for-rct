@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # Diagnostic: standard vs superpopulation-corrected IREG intervals on the gamma = 0
-# designs of Section 3 (paper Tables 1-3).  Reuses the data-generating processes,
+# designs of Section 3 (paper Table 1).  Reuses the data-generating processes,
 # seeds, estimatr fits and draw order of r/gamma0_sim.R exactly, so the uncorrected
 # coverages reproduce results/r_gamma0_*.json; the only addition is the plug-in
 #   delta_hat' Sigma_hat_X delta_hat / n

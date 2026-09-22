@@ -93,15 +93,18 @@ def gamma0_tables():
     vals = {}
     # --- skewness sweep
     CS = load("correction_summary.json")["designs"]
+    fm = lambda x: f"{x:.4f}" if x < 1 else (f"{x:.3f}" if x < 10 else f"{x:.2f}")
     rows = []
     for s_ in [0.6, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0]:
         v = r[f"lognormal_s{s_:.1f}_prop"]; d = CS[f"lognormal_s{s_:.1f}_prop"]
         wd, sm = d["median_width_95"], d["sampling"]
         skew = (exp(s_ ** 2) + 2) * sqrt(exp(s_ ** 2) - 1)
-        mrse = round(1e2 * sm["mse_ratio_mcse"])
-        cells = [f"{pct(cov(v, e))} ({wd[e]:.2f})" for e in ["IREG_HC1", "IREG_HC3", "REG_HC1", "REG_HC3"]]
-        rows.append(f"{s_:.1f} & {skew:.1f} & {v['median_max_leverage_IREG']:.2f} & {sm['mse_ratio']:.2f}\\,"
-                    + (f"({mrse})" if mrse >= 1 else "($<$1)") + " & " + " & ".join(cells) + " \\\\")
+        cells = []
+        for est in ("IREG", "REG"):
+            cells.append(f"{sm[est]['mse'] ** 0.5:.3f}")
+            for hc in ("HC1", "HC3"):
+                cells += [f"{wd[f'{est}_{hc}']:.2f}", pct(cov(v, f"{est}_{hc}"))]
+        rows.append(f"{s_:.1f} & {skew:.1f} & " + " & ".join(cells) + " \\\\")
     write("null_main_body.tex", rows)
     # --- other designs
     lab = {"gauss_quad": "Gaussian $X$, $0.3(X^2-1)$",
@@ -305,14 +308,18 @@ def hte_tables():
     for gi, (g, title) in enumerate(GROUPS):
         if gi:
             rows.append("\\addlinespace")
-        rows.append(f"\\multicolumn{{7}}{{l}}{{\\emph{{{title}}}}} \\\\")
+        rows.append(f"\\multicolumn{{12}}{{l}}{{\\emph{{{title}}}}} \\\\")
         for k in [k for k in order if BA["designs"][k]["group"] == g]:
             d = BA["designs"][k]; c, w, cal = d["coverage"], d["median_width"], d["calibration"]
             if k == "heavy_ex":
                 d = dict(d, label="Lognormal $s=1.8$")
             cell = lambda m: f"{pct(c[m])} ({fw(w[m])})"
-            rows.append(f"\\quad {d['label']} & {fr2(d['R2_tau'])} & {d['mse_ratio']:.2f} & "
-                        + " & ".join(cell(m) for m in ("IREG_HC1c", "IREG_HC3c", "REG_HC1", "REG_HC3")) + " \\\\")
+            cols = []
+            for est, ms in (("IREG", ("IREG_HC1c", "IREG_HC3c")), ("REG", ("REG_HC1", "REG_HC3"))):
+                cols.append(f"{d['mse_' + est] ** 0.5:.3f}")
+                for m in ms:
+                    cols += [fw(w[m]), pct(c[m])]
+            rows.append(f"\\quad {d['label']} & {fr2(d['R2_tau'])} & " + " & ".join(cols) + " \\\\")
             pr = "--" if d["plug_over_Gn"] is None else (f"{d['plug_over_Gn']:.1f}" if d["plug_over_Gn"] < 100 else f"{d['plug_over_Gn']:.0f}")
             rows2.append(f"{d['label']} & {fr2(d['R2_tau'])} & {pct(c['IREG_HC1'])} & {pct(c['IREG_HC1o'])} & {pct(c['IREG_HC3'])} & {pr} \\\\")
             vals[f"hte:ba:{k}:plugratio:fmt"] = pr
@@ -488,7 +495,7 @@ def sci(x):
 
 def diagnostic_tables():
     """Section 3.3-3.4 diagnostics: widths and HC3/HC1 inflation along the skewness sweep, the
-    scale-versus-shape table for s = 2, the transformation check, the plug-in bias check and
+    scale-versus-shape values for s = 2, the transformation check, the plug-in bias check and
     leverage-one Monte Carlo standard errors."""
     S = load("correction_summary.json")["designs"]
     vals, rows = {}, []
@@ -558,24 +565,17 @@ def diagnostic_tables():
         for n in ("500", "2000"):
             c = ex[s_][n]
             vals[f"valid:s{s_}:n{n}:frac"] = f"{100 * (c['sim'] - 1) / (c['predicted'] - 1):.0f}"
-    # scale versus shape, s = 2
-    st = S["lognormal_s2.0_prop"]["studentized"]; rows = []
+    # scale-versus-shape diagnostic for s = 2: values quoted in Appendix F (no table body; the table was cut)
+    st = S["lognormal_s2.0_prop"]["studentized"]
     lv = ["0.80", "0.90", "0.95", "0.98", "0.99"]
     for lab, name in (("IREG_HC1", "IREG, HC1"), ("IREG_HC3", "IREG, HC3"), ("REG_HC1", "REG, HC1")):
         x = st[lab]; c = x["implied_scale_from_95"]
-        rows.append(f"\\multicolumn{{6}}{{l}}{{\\emph{{{name}}} (implied scale $c={c:.2f}$)}} \\\\")
-        rows.append("\\quad observed coverage & " + " & ".join(f"{100 * x['levels'][l]['observed']:.1f}" for l in lv) + " \\\\")
-        rows.append("\\quad predicted by scale $c$ & " + " & ".join(f"{100 * x['levels'][l]['scale_predicted']:.1f}" for l in lv) + " \\\\")
-        rows.append("\\quad $|T|$ quantile / $t$ quantile & " + " & ".join(f"{x['levels'][l]['quantile_ratio']:.2f}" for l in lv) + " \\\\")
         vals[f"diag:scale:{lab}"] = f"{c:.2f}"
         for l in lv:
             vals[f"diag:scale:{lab}:{l}:obs"] = f"{100 * x['levels'][l]['observed']:.1f}"
             vals[f"diag:scale:{lab}:{l}:pred"] = f"{100 * x['levels'][l]['scale_predicted']:.1f}"
             vals[f"diag:scale:{lab}:{l}:qratio"] = f"{x['levels'][l]['quantile_ratio']:.2f}"
         vals[f"diag:scale:{lab}:maxdev"] = f"{100 * max(abs(x['levels'][l]['observed'] - x['levels'][l]['scale_predicted']) for l in lv):.1f}"
-        if lab != "REG_HC1":
-            rows.append("\\addlinespace")
-    write("scale_body.tex", rows)
     # transformation check (same s = 2 datasets)
     T = load("r_transform_check.json")
     for cv in ("X", "log1pX"):
@@ -591,7 +591,7 @@ def diagnostic_tables():
     # REG coverage for the population ATE in the large-heterogeneity design
     L = S["large_hte_n500_p5"]["calibration"]
     vals["corr:large_hte_n500_p5:REG_HC1:0.95"] = f"{100 * L['0.95']['REG_HC1']['coverage']:.1f}"
-    # Monte Carlo standard errors of the leverage-one subset coverages (Table 3)
+    # Monte Carlo standard errors of the leverage-one subset coverages (Table 15)
     mc = []
     for f in ("r_gamma0_rare.json", "r_gamma0_rare_estimatr2.json"):
         for v in load(f).values():

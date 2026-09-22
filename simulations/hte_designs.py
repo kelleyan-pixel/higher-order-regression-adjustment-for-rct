@@ -67,6 +67,7 @@ def summarize(a, tr, n):
     eI, eR = (a["I_est"][ok] - tau) ** 2, (a["R_est"][ok] - tau) ** 2
     r = eI.mean() / eR.mean()
     out["mse_ratio"] = float(r)
+    out["mse_IREG"], out["mse_REG"] = float(eI.mean()), float(eR.mean())
     out["mse_ratio_mcse"] = float(np.std(eI - r * eR, ddof=1) / (eR.mean() * np.sqrt(ok.sum())))
     out["plug_over_Gn"] = float(np.nanmean(a["plug"]) / Gn) if Gn > 0 else None
     out["plug_mean"] = float(np.nanmean(a["plug"]))

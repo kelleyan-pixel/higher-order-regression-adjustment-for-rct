@@ -18,13 +18,13 @@ What in the paper is proved, what is verified by computation, and how to check i
   in Appendix A (Lemma "Leading expansion bias") and compared with simulated biases in Appendix B. The expansion MSE is not the exact
   MSE; conditions relating them are not verified.
 - In the heaviest-tailed designs the full-moment deficiency is dominated by covariate values beyond the
-  `1 - 10^-4` quantile; Table 10 recomputes it for truncated lognormal laws (closed-form moments).
+  `1 - 10^-4` quantile; Table 9 recomputes it for truncated lognormal laws (closed-form moments).
 
 ## Numerical verification of the theory
 
 `simulations/run_validation.py` estimates `D_p` in six analytic designs with an exactly centered control
 variate; `run_ablation.py` shows that the verification rejects each incorrect variant of the formula;
-`run_example.py` compares predicted and simulated MSE ratios along a lognormal family (Table 9, with
+`run_example.py` compares predicted and simulated MSE ratios along a lognormal family (Table 8, with
 cell-specific Monte Carlo standard errors).
 
 ## Inference simulations
@@ -36,12 +36,12 @@ cell-specific Monte Carlo standard errors).
 - The leading-order plug-in bias `G/n + 4 p sigma^2 / n^2` (Section 3.2) is a heuristic; it matches the
   simulated mean plug-in in the five Gaussian homoskedastic designs to within 0.8%.
 - Leverage-one behavior differs between estimatr 1.0.2 and the GitHub development version 2.0.0; both are
-  applied to the same simulated datasets (same seeds) and reported (Table 6, Appendix D). The proportions of
+  applied to the same simulated datasets (same seeds) and reported (Table 15, Appendix F). The proportions of
   rank-deficient and leverage-one replications match their exact probabilities within Monte Carlo error.
 
 ## Consistency and determinism
 
-- Every number in Section 3, Appendices D and E, and the values in all tables are generated from `results/`.
+- Every number in Section 3 and the appendices, and the values in all tables, are generated from `results/`.
   `simulations/check_prose_numbers.py` recomputes every other number quoted in the prose, and the qualitative
   claims about the diagnostics, from `results/`.
 - `simulations/check_determinism.py` (Python) and a repeated run of `r/gamma0_sim.R` (R) confirm

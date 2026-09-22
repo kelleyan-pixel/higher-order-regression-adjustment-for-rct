@@ -11,8 +11,9 @@ Estimators in Randomized Trials*. The paper is `paper/main.pdf` (source `paper/m
   sampling and moments); no further high-level assumption is needed. The proof uses the two-sample representation of the completely randomized design
   (Appendix A) and a symbolic certificate for the index algebra (`verification/`).
 - **Inference (simulation).** Without treatment-effect heterogeneity, IREG with HC1 standard errors can
-  undercover substantially under skewed, heteroskedastic designs, mainly through understatement of the
-  variance scale; HC3 largely corrects the scale but not extreme leverage (Section 3).
+  undercover substantially under skewed, heteroskedastic designs, because the arm-specific fits concentrate
+  leverage on extreme covariate values; HC3 substantially improves coverage but does not fully repair the
+  most extreme leverage configurations (Section 3).
 - **Superpopulation component.** The conventional robust variance of the centered IREG implementation omits a
   component `G/n` of the population-ATE variance; REG's does not. Appendix E compares the plug-in correction
   with the true `G/n` across nominal levels.
@@ -21,7 +22,7 @@ Estimators in Randomized Trials*. The paper is `paper/main.pdf` (source `paper/m
 
 ```
 paper/            main.tex, references.bib, main.pdf; tables/ and figures/ are generated
-verification/     symbolic certificate for Theorem 12; numerical check of Theorem 11
+verification/     symbolic certificate for Theorem 11; numerical check of Theorem 10
 simulations/      Python: D_p verification, examples, correction diagnostic, cross-checks, table builder
   formula.py dgps.py sim.py            exact D_p, analytic designs, control-variate engine
   run_validation.py run_ablation.py run_bias.py run_example.py
@@ -52,7 +53,7 @@ MANIFEST.txt, SHA256SUMS.txt   file list and checksums of this tree (check with:
   `sudo apt-get install r-base-core r-cran-estimatr r-cran-jsonlite`). All main inference results use
   estimatr 1.0.2 with `se_type = "HC1"`, `"HC2"` or `"HC3"` requested explicitly; estimatr's default without
   clustering is HC2.
-- Table 6 also uses the development version of estimatr on GitHub (DESCRIPTION version 2.0.0, commit
+- Table 15 (the rare-value design) also uses the development version of estimatr on GitHub (DESCRIPTION version 2.0.0, commit
   `e70f3ee4c63eb5ea3803215cf5ac155c4feecced`), which handles leverage-one observations differently.
   `r/install_estimatr2.sh` builds it into `.Rlib/estimatr2` (needs a C++ toolchain, Rcpp, RcppEigen, Formula,
   generics, rlang and network access to codeload.github.com). We do not claim it corresponds to a CRAN release.
@@ -93,10 +94,10 @@ summary per design (`results/correction/rsum_*.json`), which is sufficient to re
 
 | Paper object | Script | Output |
 |---|---|---|
-| Theorem 12 (index algebra) | `verification/general_p_symbolic_certificate.py` | prints the certificate; zero remainder |
-| Theorem 11 check | `verification/crt_correction_certificate.py` | `results/crt_correction.json` |
+| Theorem 11 (index algebra) | `verification/general_p_symbolic_certificate.py` | prints the certificate; zero remainder |
+| Theorem 10 check | `verification/crt_correction_certificate.py` | `results/crt_correction.json` |
 | Introductory example; Appendix C validity table | `simulations/run_example.py` | `results/example.json` |
-| Section 3.3 table (coverage); Appendix F further-designs, scale-versus-shape and leverage-one tables | `r/gamma0_sim.R` | `results/r_gamma0_*.json` |
+| Section 3.3 table (RMSE, widths, coverage); Appendix F further-designs, width and leverage-one tables | `r/gamma0_sim.R` | `results/r_gamma0_*.json` |
 | Section 3.3 widths and MSE ratios; Appendix E tables and calibration figure; Appendix F sampling and HC3/HC1 tables | `r/correction_sim.R`, `simulations/correction_python.py`, `simulations/correction_summarize.py` | `results/correction_summary.*`, `results/calibration.csv` |
 | Sections 3.4-3.5: heterogeneity sweep (table and figure), combined battery (main and Appendix F tables) | `simulations/hte_designs.py` | `results/hte_sweep.json`, `results/hte_battery.json` |
 | Appendix C tail-sensitivity table; prediction column of the Appendix F sampling table | `simulations/make_tables.py` (closed-form truncated lognormal moments via `run_example.population`) | `paper/tables/tail_body.tex` |
