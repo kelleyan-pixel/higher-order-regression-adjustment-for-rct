@@ -178,20 +178,31 @@ def main():
         (all(d["coverage"]["IREG_HC1"] < d["coverage"]["IREG_HC1o"] - 0.005 for k, d in SW.items() if k != "R2_0.00")
          and all(abs(d["coverage"]["IREG_HC1o"] - 0.95) < 0.01 for d in SW.values()), "The oracle correction restores nominal coverage at every level"),
         # Section 3.5
-        (all(abs(BA[k][m]["coverage"] if False else BA[k]["coverage"][m] - 0.95) < 0.01 for k in ("gauss_low", "gauss_high") for m in ("IREG_HC1c", "REG_HC1")),
-         "In the Gaussian designs both procedures are close to nominal"),
-        (BA["skew_null"]["coverage"]["IREG_HC1c"] > BA["skew_null"]["coverage"]["IREG_HC1"], "the correction raises IREG's coverage from"),
-        (BA["skew_low"]["coverage"]["IREG_HC1"] > BA["skew_mid"]["coverage"]["IREG_HC1"] > BA["skew_high"]["coverage"]["IREG_HC1"]
-         and all(abs(BA[k]["coverage"]["IREG_HC1c"] - BA[k]["coverage"]["IREG_HC1o"]) < 0.005 for k in ("skew_low", "skew_mid", "skew_high")),
-         "the feasible correction restores"),
-        (min(BA[k]["coverage"]["REG_HC1"] for k in ("skew_low", "skew_mid")) > 0.945 and BA["skew_high"]["coverage"]["REG_HC1"] < 0.94,
-         "REG+HC1 stays near nominal at small and moderate heterogeneity"),
-        (BA["heavy_high"]["coverage"]["REG_HC1"] < 0.93 and BA["heavy_high"]["coverage"]["REG_HC1"] < BA["heavy_high"]["coverage"]["IREG_HC1c"],
-         "The heavy-tailed designs show the mechanisms compounding"),
-        (BA["rare"]["coverage"]["IREG_HC1c"] < 0.945 and BA["rare"]["coverage"]["IREG_HC1c"] > BA["rare"]["coverage"]["IREG_HC1"], "still below nominal"),
-        (min(BA[k]["mse_ratio"] for k in ("skew_null", "skew_low", "heavy_low")) > 1.02 and all(abs(BA[k]["mse_ratio"] - 1) < 0.01 for k in ("gauss_low", "gauss_high", "skew_high"))
-         and BA["heavy_high"]["mse_ratio"] > 1.05 and BA["rare"]["mse_ratio"] < 0.98,
-         "IREG remains less precise in the heavy-tailed design even with large heterogeneity"),
+        (all(BA[k]["coverage"][m] >= 0.93 for k in ("gauss_low", "misspec_null", "skew_null", "heavy_low", "ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small") for m in ("IREG_HC1c", "IREG_HC3c", "REG_HC1", "REG_HC3")),
+         "every procedure covers at least $93\\%$ at the $95\\%$ level"),
+        (all(BA[k]["plug_over_Gn"] >= 4 for k in ("heavy_low", "ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small")) and BA["ln20_small"]["calibration"]["0.95"]["IREG_HC1o"] < 0.90,
+         "The plug-in is not, however, estimating the population component"),
+        (all(BA[k]["median_width"]["IREG_HC1c"] >= BA[k]["median_width"]["REG_HC1"] for k in ("gauss_low", "misspec_null", "skew_null", "heavy_low", "ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small"))
+         and all(BA[k]["median_width"]["IREG_HC3c"] >= BA[k]["median_width"]["REG_HC3"] for k in ("gauss_low", "misspec_null", "skew_null", "heavy_low", "ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small"))
+         and all(BA[k]["coverage"]["IREG_HC3c"] > 0.95 for k in ("skew_null", "heavy_low", "ln12_small", "ln15_small", "heavy_ex", "ln20_small"))
+         and all(BA[k]["mse_ratio"] >= 0.999 for k in ("gauss_low", "misspec_null", "skew_null", "heavy_low", "ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small")), "REG reaches the same coverage with shorter intervals"),
+        (BA["gauss_low"]["plug_over_Gn"] < 2 and abs(BA["gauss_low"]["median_width"]["IREG_HC1c"] / BA["gauss_low"]["median_width"]["REG_HC1"] - 1) < 0.01,
+         "the two estimators' intervals have the same width"),
+        (all(BA[k]["calibration"]["0.80"]["IREG_HC1c"] < 0.79 and BA[k]["calibration"]["0.99"]["IREG_HC1c"] >= 0.989
+             and abs(BA[k]["calibration"]["0.80"]["IREG_HC1c"] - BA[k]["calibration"]["0.80"]["REG_HC1"]) < 0.015
+             and all(BA[k]["calibration"][L]["IREG_HC1o"] < float(L) - 0.005 for L in ("0.80", "0.90", "0.95", "0.98", "0.99"))
+             for k in ("ln15_small", "heavy_ex", "ln20_small")), "a crossing pattern much like REG+HC1's"),
+        (all(abs(BA[k]["calibration"]["0.80"]["IREG_HC3"] - 0.80) < abs(BA[k]["calibration"]["0.80"]["IREG_HC1c"] - 0.80) for k in ("ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small")),
+         "In the lognormal designs, IREG+HC3 without the plug-in is closer to nominal at the low levels"),
+        (all(BA[k]["plug_over_Gn"] < 2 for k in ("ln15_mid", "ln15_large")) and all(BA[k]["coverage"]["IREG_HC1c"] < 0.93 for k in ("ln15_mid", "ln15_large"))
+         and BA["ln15_mid"]["coverage"]["IREG_HC3c"] > 0.945 and BA["ln15_large"]["coverage"]["IREG_HC3c"] < 0.93, "no longer masks the leverage problem"),
+        (all(BA[k]["coverage"]["REG_HC1"] < BA[k]["coverage"]["IREG_HC1c"] and BA[k]["coverage"]["REG_HC1"] < BA[k]["coverage"]["REG_HC3"] < 0.945
+             for k in ("ln15_mid", "ln15_large")), "HC3 improves REG but recovers only part of the gap"),
+        (BA["heavy_high"]["coverage"]["IREG_HC3c"] >= 0.95 and BA["heavy_high"]["coverage"]["REG_HC1"] < BA["heavy_high"]["coverage"]["REG_HC3"] < 0.94,
+         "shows the same ordering"),
+        (all(abs(BA["gauss_high"]["coverage"][m] - 0.95) < 0.01 for m in ("IREG_HC1c", "IREG_HC3c", "REG_HC1", "REG_HC3"))
+         and BA["rare"]["mse_ratio"] < 0.98 and all(BA["rare"]["coverage"][m] < 0.945 for m in ("IREG_HC1c", "IREG_HC3c")),
+         "while both IREG procedures remain slightly below nominal"),
         (C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] < 0.80 and C[g0]["calibration"]["0.99"]["REG_HC1"]["coverage"] > 0.99
          and C[g0]["studentized"]["REG_HC1"]["levels"]["0.80"]["quantile_ratio"] > 1 > C[g0]["studentized"]["REG_HC1"]["levels"]["0.99"]["quantile_ratio"]
          and abs(C[g0]["calibration"]["0.80"]["IREG_HC3"]["coverage"] - 0.80) < abs(C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] - 0.80),

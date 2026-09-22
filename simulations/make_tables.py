@@ -292,23 +292,60 @@ def hte_tables():
     vals["hte:sw:reg:max"] = pct(max(d["coverage"]["REG_HC1"] for d in SW["designs"].values()))
     vals["hte:sw:oracle:min"] = pct(min(d["coverage"]["IREG_HC1o"] for d in SW["designs"].values()))
     vals["hte:sw:oracle:max"] = pct(max(d["coverage"]["IREG_HC1o"] for d in SW["designs"].values()))
-    # Table C: battery (main) and its appendix companion
-    SHORT = {"gauss_low": "Gaussian, small HTE", "gauss_high": "Gaussian, large HTE", "misspec_null": "Misspecified, $G=0$",
-             "skew_null": "Skewed, het., $G=0$", "skew_low": "Skewed, het., small HTE", "skew_mid": "Skewed, het., moderate HTE",
-             "skew_high": "Skewed, het., large HTE", "heavy_low": "Heavy-tailed, het., small HTE",
-             "heavy_high": "Heavy-tailed, het., large HTE", "rare": "Rare extreme values"}
-    rows, rows2 = [], []
-    for k in SHORT:                                      # the order of the design list in hte_designs.py
-        d = dict(BA["designs"][k], label=SHORT[k])
-        c, w = d["coverage"], d["median_width"]
-        r2 = f"{d['R2_tau']:.3f}" if d["R2_tau"] < 0.01 else f"{d['R2_tau']:.2f}"
-        rows.append(f"{d['label']} & {r2} & {d['mse_ratio']:.2f} & {pct(c['IREG_HC1c'])} & {w['IREG_HC1c']:.3f}"
-                    f" & {pct(c['REG_HC1'])} & {w['REG_HC1']:.3f} \\\\")
-        pr = "--" if d["plug_over_Gn"] is None else f"{d['plug_over_Gn']:.2f}"
-        rows2.append(f"{d['label']} & {pct(c['IREG_HC1'])} & {pct(c['IREG_HC1o'])} & {pct(c['IREG_HC3'])} & {pct(c['IREG_HC3c'])}"
-                     f" & {pct(c['REG_HC3'])} & {pr} \\\\")
+    # Table C: battery, all four procedures; Table D: calibration of the plug-in with small R^2_tau
+    fw = lambda w: f"{w:.2f}" if w < 10 else f"{w:.1f}"
+    fr2 = lambda r: "0" if r == 0 else (f"{r:.3f}" if r < 0.01 else f"{r:.2f}")
+    GROUPS = [("small", "Small or no heterogeneity"), ("moderate", "Moderate heterogeneity"), ("large", "Large heterogeneity")]
+    seq = ["gauss_low", "misspec_null", "skew_null", "heavy_low", "ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small",
+           "ln15_mid", "rare", "heavy_high", "ln15_large", "gauss_high"]
+    order = [k for k in seq if k in BA["designs"]]
+    METH = ("IREG_HC1", "IREG_HC1c", "IREG_HC1o", "IREG_HC3", "IREG_HC3c", "REG_HC1", "REG_HC3")
+    rows, rows2, rows3 = [], [], []
+    for gi, (g, title) in enumerate(GROUPS):
+        if gi:
+            rows.append("\\addlinespace")
+        rows.append(f"\\multicolumn{{7}}{{l}}{{\\emph{{{title}}}}} \\\\")
+        for k in [k for k in order if BA["designs"][k]["group"] == g]:
+            d = BA["designs"][k]; c, w, cal = d["coverage"], d["median_width"], d["calibration"]
+            if k == "heavy_ex":
+                d = dict(d, label="Lognormal $s=1.8$")
+            cell = lambda m: f"{pct(c[m])} ({fw(w[m])})"
+            rows.append(f"\\quad {d['label']} & {fr2(d['R2_tau'])} & {d['mse_ratio']:.2f} & "
+                        + " & ".join(cell(m) for m in ("IREG_HC1c", "IREG_HC3c", "REG_HC1", "REG_HC3")) + " \\\\")
+            pr = "--" if d["plug_over_Gn"] is None else (f"{d['plug_over_Gn']:.1f}" if d["plug_over_Gn"] < 100 else f"{d['plug_over_Gn']:.0f}")
+            rows2.append(f"{d['label']} & {fr2(d['R2_tau'])} & {pct(c['IREG_HC1'])} & {pct(c['IREG_HC1o'])} & {pct(c['IREG_HC3'])} & {pr} \\\\")
+            vals[f"hte:ba:{k}:plugratio:fmt"] = pr
+            vals[f"hte:ba:{k}:wr1"] = f"{w['IREG_HC1c'] / w['REG_HC1']:.2f}"
+            vals[f"hte:ba:{k}:wr3"] = f"{w['IREG_HC3c'] / w['REG_HC3']:.2f}"
+            for m in METH:
+                for L in cal:
+                    vals[f"hte:ba:{k}:{m}:cal:{L}"] = pct(cal[L][m])
+            if g == "small" and d["G"] > 0:
+                lv = ("0.80", "0.95", "0.99")
+                rows3.append(f"{d['label']} & {fr2(d['R2_tau'])} & {pr} & "
+                             + " & ".join(pct(cal[L]["IREG_HC1o"]) for L in lv) + " & "
+                             + " & ".join(pct(cal[L]["IREG_HC1c"]) for L in lv) + " & "
+                             + " & ".join(pct(cal[L]["REG_HC1"]) for L in lv) + f" & {w['IREG_HC1c'] / w['REG_HC1']:.2f} \\\\")
+    small = [BA["designs"][k] for k in order if BA["designs"][k]["group"] == "small"]
+    smallG = [d for d in small if d["G"] > 0]
+    for tag, m in (("I1c", "IREG_HC1c"), ("R1", "REG_HC1"), ("I1", "IREG_HC1"), ("I3c", "IREG_HC3c"), ("I3", "IREG_HC3")):
+        xs = [d["coverage"][m] for d in small]
+        vals[f"hte:ba:small:{tag}:min"], vals[f"hte:ba:small:{tag}:max"] = pct(min(xs)), pct(max(xs))
+    vals["hte:ba:small:wr1:max"] = f"{max(d['median_width']['IREG_HC1c'] / d['median_width']['REG_HC1'] for d in small):.2f}"
+    vals["hte:ba:small:wr3:max"] = f"{max(d['median_width']['IREG_HC3c'] / d['median_width']['REG_HC3'] for d in small):.2f}"
+    vals["hte:ba:small:plug:min"] = f"{min(d['plug_over_Gn'] for d in smallG):.0f}"
+    vals["hte:ba:small:plug:max"] = f"{max(d['plug_over_Gn'] for d in smallG):.0f}"
+    smallNG = [d for d in smallG if not d["label"].startswith("Gaussian")]
+    vals["hte:ba:smallng:plug:min"] = f"{min(d['plug_over_Gn'] for d in smallNG):.0f}"
+    vals["hte:ba:smallng:plug:max"] = f"{max(d['plug_over_Gn'] for d in smallNG):.0f}"
+    vals["hte:ba:ndesigns"] = str(len(BA["designs"]))
+    x80 = [BA["designs"][k]["calibration"]["0.80"]["IREG_HC3"] for k in ("ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small")]
+    vals["hte:ba:small:I3cal80:min"], vals["hte:ba:small:I3cal80:max"] = pct(min(x80)), pct(max(x80))
+    vals["hte:ba:mse:min"] = f"{min(d['mse_ratio'] for d in BA['designs'].values()):.2f}"
+    vals["hte:ba:mse:max"] = f"{max(d['mse_ratio'] for d in BA['designs'].values()):.2f}"
     write("hte_battery_body.tex", rows)
     write("hte_battery_supp_body.tex", rows2)
+    write("hte_calibration_body.tex", rows3)
     hte_figure(SW)
     return vals
 
