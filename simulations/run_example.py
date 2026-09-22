@@ -126,12 +126,12 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     res = {}
 
-    # ---- introductory example: sx = 0.8, c = 2, g = 0.4
-    sx, c, g = 0.8, 2.0, 0.4
+    # ---- introductory example: sx = 1.1, c = 1, g = 0 (no treatment-effect heterogeneity)
+    sx, c, g = 1.1, 1.0, 0.0
     pop = population(sx, c, g)
     res["intro_population"] = pop
     res["intro_ratio"] = {}
-    for n, reps in [(500, 200000), (2000, 100000)]:
+    for n, reps in [(500, 200000), (2000, 100000), (8000, 25000)]:
         r, se = mse_ratio(sx, c, g, n, reps, seed=n)
         res["intro_ratio"][n] = dict(sim=r, se=se, predicted=1 + pop["Delta"] / n)
         print("ratio", n, res["intro_ratio"][n], flush=True)

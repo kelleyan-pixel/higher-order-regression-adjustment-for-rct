@@ -342,6 +342,16 @@ def diagnostic_tables():
         for q, x in zip(("full", "4", "6", "8"), cells):
             vals[f"tail:{key}:{q}"] = fmt(x)
     write("tail_body.tex", rows)
+    exi = load("example.json")
+    ip, ir, ic = exi["intro_population"], exi["intro_ratio"], exi["intro_coverage"]
+    pc2 = lambda x: f"{x:.1f}" if abs(x) >= 2 else f"{x:.2f}"
+    vals["intro:skew"], vals["intro:Delta"], vals["intro:Deltaround"] = f"{ip['skew']:.1f}", f"{ip['Delta']:.1f}", f"{ip['Delta']:.0f}"
+    for n in ("500", "2000", "8000"):
+        vals[f"intro:sim:{n}"], vals[f"intro:pred:{n}"] = pc2(100 * (ir[n]["sim"] - 1)), pc2(100 * (ir[n]["predicted"] - 1))
+    vals["intro:se:500"] = f"{100 * ir['500']['se']:.2f}"
+    for k in ("IREG+HC1", "IREG+HC3", "REG+HC1"):
+        vals["intro:cov:" + k.replace("+", "_")] = f"{100 * ic[k][0]:.1f}"
+    vals["intro:cov:mcse"] = f"{100 * max(ic[k][1] for k in ('IREG+HC1', 'IREG+HC3', 'REG+HC1')):.2f}"
     ex = load("example.json")["sweep"]
     for s_ in ("0.8", "1.0", "1.2"):
         vals[f"def:s{s_}"] = f"{ex[s_]['Delta']:.0f}"

@@ -7,8 +7,8 @@
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
      21322  paper/figures/calibration.pdf
-    557135  paper/main.pdf
-    116311  paper/main.tex
+    557248  paper/main.pdf
+    116725  paper/main.tex
      10797  paper/references.bib
        672  paper/tables/ablation_body.tex
       1249  paper/tables/calibration_body.tex
@@ -16,7 +16,7 @@
       1075  paper/tables/gamma0_other_body.tex
        646  paper/tables/gamma0_rare_body.tex
        391  paper/tables/gamma0_skew_body.tex
-     70680  paper/tables/gamma0_values.tex
+     71491  paper/tables/gamma0_values.tex
        441  paper/tables/gamma0_width_body.tex
        528  paper/tables/sampling_body.tex
        831  paper/tables/scale_body.tex
@@ -42,7 +42,7 @@
       9359  results/correction/py_gauss_indep_arms_n500_p5.json
       9799  results/correction/py_heavy_het_n500_p5.json
       9066  results/correction/py_heavy_tail_example.json
-      9109  results/correction/py_intro_example.json
+      8757  results/correction/py_intro_example.json
      10276  results/correction/py_large_hte_n1000_p10.json
       9034  results/correction/py_large_hte_n1000_p2.json
       9263  results/correction/py_large_hte_n1000_p5.json
@@ -74,13 +74,13 @@
       8704  results/correction/rsum_lognormal_s2.0_prop.json
       8768  results/correction/rsum_rare_q0.02_homo.json
       8790  results/correction/rsum_rare_q0.02_prop.json
-     16850  results/correction_summary.csv
-    411016  results/correction_summary.json
-      9900  results/correction_summary.md
+     16759  results/correction_summary.csv
+    410640  results/correction_summary.json
+      9894  results/correction_summary.md
        681  results/crosscheck.json
       1122  results/crt_correction.json
        189  results/env.json
-      4687  results/example.json
+      4753  results/example.json
        303  results/r_crosscheck.json
       7658  results/r_datasets/gauss_misspec_01.csv
       4464  results/r_datasets/gauss_misspec_01.json
@@ -135,7 +135,7 @@
       3171  run_all.sh
        951  run_correction_study.sh
       1168  simulations/check_determinism.py
-     15814  simulations/check_prose_numbers.py
+     15520  simulations/check_prose_numbers.py
       8070  simulations/correction_common.py
      12565  simulations/correction_python.py
       9936  simulations/correction_summarize.py
@@ -145,10 +145,10 @@
        756  simulations/env_report.py
       3263  simulations/formula.py
       1448  simulations/hc.py
-     23362  simulations/make_tables.py
+     24124  simulations/make_tables.py
       2016  simulations/run_ablation.py
       2732  simulations/run_bias.py
-      7721  simulations/run_example.py
+      7770  simulations/run_example.py
       2470  simulations/run_validation.py
       3564  simulations/sim.py
       4640  verification/crt_correction_certificate.py

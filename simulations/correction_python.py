@@ -245,7 +245,7 @@ def main(which):
             json.dump(s, open(f, "w"), indent=1)
             print(key, s["coverage"]["IREG_HC1"]["coverage"], s["coverage"]["IREG_HC1c"]["coverage"], flush=True)
     elif which == "example":
-        for key, (sx, c, g, seed) in {"intro_example": (0.8, 2.0, 0.4, 17),
+        for key, (sx, c, g, seed) in {"intro_example": (1.1, 1.0, 0.0, 17),
                                       "heavy_tail_example": (1.8, 1.5, 0.3, 31)}.items():
             f = os.path.join(OUT, f"py_{key}.json")
             if os.path.exists(f):

@@ -31,17 +31,6 @@ def main():
     s08 = ex["sweep"]["0.8"]
     checks = [
         # (recomputed string, exact text that must appear in main.tex)
-        (f"{ip['skew']:.2f}", "skewness $3.69$"),
-        (f"{ip['kurt']:.1f}", "kurtosis $34.4$"),
-        (f"{ip['R2tau']:.4f}", "is $0.0032$"),
-        (f"{ip['Delta']:.1f}", "$\\Delta = 15.6$"),
-        (f"{100 * (ex['intro_ratio']['500']['predicted'] - 1):.1f}", "by $3.1\\%$"),
-        (f"{100 * (ex['intro_ratio']['500']['sim'] - 1):.1f}", "simulation gives $2.3\\%$"),
-        (f"{100 * ex['intro_ratio']['500']['se']:.2f}", "error $0.02\\%$"),
-        (f"{100 * (ex['intro_ratio']['2000']['predicted'] - 1):.2f}", "prediction is $0.78\\%$"),
-        (f"{100 * (ex['intro_ratio']['2000']['sim'] - 1):.2f}", "simulation gives $0.67\\%$"),
-        (f"{100 * ex['intro_coverage']['IREG+HC1'][0]:.1f}", "ATE in $94.5\\%$ of replications"),
-        (f"{100 * ex['intro_coverage']['REG+HC1'][0]:.1f}", "REG+HC1 in $95.0\\%$"),
         (f"{hr['population']['skew']:.0f}", "skewness $136$"),
         (f"{hr['population']['Delta'] / 1e4:.1f}", "3.9\\times10^4"),
         (f"{hr['500']['predicted']:.1f}", "ratio of $78.5$"),
@@ -174,6 +163,11 @@ def main():
         (abs((lambda e2, e8, e32: e32 + (e32 - e8) * ((e32 - e8) / (e8 - e2)) / (1 - (e32 - e8) / (e8 - e2)))(
              full["est"]["200"]["cv"], full["est"]["800"]["cv"], full["est"]["3200"]["cv"]) - full["formula"]) < 1.0,
          "which extrapolates to about"),
+        (ex["intro_population"]["R2tau"] == 0 and ex["intro_coverage"]["IREG+HC1"][0] < ex["intro_coverage"]["REG+HC1"][0] - 0.01,
+         "but IREG with HC1 covers it in only"),
+        (all(ex["intro_ratio"][n]["predicted"] > ex["intro_ratio"][n]["sim"] > 1 for n in ("500", "2000", "8000"))
+         and abs(ex["intro_ratio"]["8000"]["predicted"] - ex["intro_ratio"]["8000"]["sim"]) < abs(ex["intro_ratio"]["500"]["predicted"] - ex["intro_ratio"]["500"]["sim"]),
+         "overstates this gap, but the two converge as $n$ grows"),
         (C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] < 0.80 and C[g0]["calibration"]["0.99"]["REG_HC1"]["coverage"] > 0.99
          and C[g0]["studentized"]["REG_HC1"]["levels"]["0.80"]["quantile_ratio"] > 1 > C[g0]["studentized"]["REG_HC1"]["levels"]["0.99"]["quantile_ratio"]
          and abs(C[g0]["calibration"]["0.80"]["IREG_HC3"]["coverage"] - 0.80) < abs(C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] - 0.80),

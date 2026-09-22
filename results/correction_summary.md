@@ -6,7 +6,7 @@ Coverage (%) of the PATE by nominal 95% intervals. `c` = plug-in correction (+ d
 
 | Design | HTE | n | p | R2_tau | IREG HC1 | HC1c | HC2 | HC2c | HC3 | HC3c | REG HC1 | REG HC3 | IREG HC1o | HC3o | max MCSE |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| intro_example | yes | 500 | 1 | 0.003 | 94.5 | 95.0 | 94.8 | 95.3 | 95.2 | 95.6 | 95.0 | 95.4 | 94.5 | 95.3 | 0.07 |
+| intro_example | yes | 500 | 1 | 0.000 | 93.5 | 94.8 | 94.2 | 95.3 | 95.2 | 96.0 | 94.9 | 95.7 | -- | -- | 0.08 |
 | heavy_tail_example | yes | 500 | 1 | 0.009 | 85.6 | 94.4 | 88.9 | 95.8 | 94.0 | 97.3 | 94.4 | 96.7 | 86.5 | 94.5 | 0.11 |
 | gauss_iid_n500_p5 | yes | 500 | 5 | 0.022 | 94.7 | 95.1 | 94.8 | 95.1 | 95.0 | 95.3 | 95.0 | 95.2 | 94.9 | 95.2 | 0.16 |
 | gauss_indep_arms_n500_p5 | yes | 500 | 5 | 0.022 | 94.8 | 95.1 | 94.8 | 95.1 | 95.0 | 95.4 | 95.0 | 95.2 | 95.0 | 95.3 | 0.16 |
@@ -52,7 +52,7 @@ Plug-in statistics use full-rank IREG fits; coverage above uses every replicatio
 
 | Design | G/n (true) | mean plug-in | median plug-in | mean/(G/n) | median plug-in / HC1 var | HC1 median width ratio | HC1 miss->cover | HC3 miss->cover | rank-def. | degenerate fit | lev. one |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| intro_example | 5.44e-04 | 3.84e-03 | 1.50e-03 | 7.05 | 0.010 | 1.005 | 0.5 | 0.4 | 0.0 | 0.0 | 0.0 |
+| intro_example | 0.00e+00 | 6.75e-03 | 1.96e-03 | -- | 0.019 | 1.009 | 1.2 | 0.8 | 0.0 | 0.0 | 0.0 |
 | heavy_tail_example | 1.13e-01 | 3.51e+00 | 3.21e-01 | 31.10 | 0.118 | 1.057 | 8.8 | 3.3 | 0.0 | 0.0 | 0.0 |
 | gauss_iid_n500_p5 | 1.80e-04 | 2.62e-04 | 2.47e-04 | 1.45 | 0.031 | 1.015 | 0.3 | 0.4 | 0.0 | 0.0 | 0.0 |
 | gauss_indep_arms_n500_p5 | 1.80e-04 | 2.60e-04 | 2.45e-04 | 1.45 | 0.030 | 1.015 | 0.4 | 0.3 | 0.0 | 0.0 | 0.0 |
