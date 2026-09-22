@@ -43,7 +43,8 @@ def run(dgp, n, reps, chunk, seed=0):
     done = 0
     while done < reps:
         B = min(chunk, reps - done)
-        Z1 = draw_Z(rng, (B, m, p), dgp['kinds']); Z0 = draw_Z(rng, (B, m, p), dgp['kinds'])
+        draw = dgp.get('draw', lambda r, shape: draw_Z(r, shape, dgp['kinds']))   # custom draw for dependent coordinates
+        Z1 = draw(rng, (B, m, p)); Z0 = draw(rng, (B, m, p))
         e1 = dgp['g1'](Z1) + dgp['s1'](Z1) * rng.standard_normal((B, m))
         e0 = dgp['g0'](Z0) + dgp['s0'](Z0) * rng.standard_normal((B, m))
         Y1 = tau + Z1 @ (beta0 + gam) + e1

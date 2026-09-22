@@ -78,6 +78,7 @@ def main():
     }
     _res = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results")
     SW = json.load(open(os.path.join(_res, "hte_sweep.json")))["designs"]
+    FAM = json.load(open(os.path.join(_res, "validation_families.json")))
     BA = json.load(open(os.path.join(_res, "hte_battery.json")))["designs"]
     rho_, m_ = 0.02, 250
     q0_, q1_ = (1 - rho_) ** m_, m_ * rho_ * (1 - rho_) ** (m_ - 1)
@@ -158,6 +159,15 @@ def main():
         (abs((lambda e2, e8, e32: e32 + (e32 - e8) * ((e32 - e8) / (e8 - e2)) / (1 - (e32 - e8) / (e8 - e2)))(
              full["est"]["200"]["cv"], full["est"]["800"]["cv"], full["est"]["3200"]["cv"]) - full["formula"]) < 1.0,
          "which extrapolates to about"),
+        # Appendix B: further covariate families
+        (max(FAM["level"].values(), key=lambda d: abs(d["mc_matrix_check"] - d["target"]) / abs(d["target"]))["family"] == "heavytail",
+         "the largest discrepancy occurring in the scale mixture"),
+        (all((d["target"] < 0) == (d["family"] in ("gauss", "lowkurt")) for d in FAM["level"].values()),
+         "favor IREG strongly"),
+        (sum(abs(d["z"]) > 1.96 for d in FAM["rate"].values()) == 1 and abs(FAM["rate"]["heavytail_n1000"]["z"]) > 1.96
+         and all(abs(d["z"]) <= 1.96 for d in FAM["level"].values()), "one of the twelve points below"),
+        (all(max(d["se"] for d in FAM["rate"].values() if d["family"] == f) / min(d["se"] for d in FAM["rate"].values() if d["family"] == f) < 1.1
+             for f in ("gauss", "lowkurt", "heavytail", "misspec")), "the standard errors stay constant as $n$ grows"),
         # introduction (typed numbers)
         (f"{100 * (ex['intro_ratio']['500']['sim'] - 1):.1f}", "by $6.7\\%$ at $n=500$"),
         (f"{ex['intro_population']['Delta']:.0f}", "around $83$ users"),

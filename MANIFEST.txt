@@ -1,22 +1,24 @@
-# Files in this release (162 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
+# Files in this release (167 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
        135  .gitignore
        510  CITATION.cff
       1085  LICENSE
-      7280  README.md
+      7429  README.md
       3820  VERIFICATION.md
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
      21322  paper/figures/calibration.pdf
      19358  paper/figures/hte_coverage.pdf
-    602977  paper/main.pdf
-    120427  paper/main.tex
+     23814  paper/figures/validation_rates.pdf
+     22211  paper/figures/validation_z.pdf
+    651088  paper/main.pdf
+    124662  paper/main.tex
      10797  paper/references.bib
        672  paper/tables/ablation_body.tex
       1249  paper/tables/calibration_body.tex
        196  paper/tables/correction95_body.tex
       1005  paper/tables/gamma0_other_body.tex
        646  paper/tables/gamma0_rare_body.tex
-    144413  paper/tables/gamma0_values.tex
+    145230  paper/tables/gamma0_values.tex
        441  paper/tables/gamma0_width_body.tex
       1530  paper/tables/hte_battery_body.tex
        756  paper/tables/hte_battery_supp_body.tex
@@ -27,6 +29,7 @@
        831  paper/tables/scale_body.tex
        239  paper/tables/tail_body.tex
        668  paper/tables/validation_body.tex
+       811  paper/tables/validation_families_body.tex
        444  paper/tables/validity_body.tex
       2962  r/common.R
       3302  r/correction_sim.R
@@ -139,10 +142,11 @@
        840  results/r_validation.json
       1786  results/r_validation_estimatr2.json
       3119  results/validation.json
-      3209  run_all.sh
+      5669  results/validation_families.json
+      3259  run_all.sh
        951  run_correction_study.sh
       1168  simulations/check_determinism.py
-     19895  simulations/check_prose_numbers.py
+     20852  simulations/check_prose_numbers.py
       8070  simulations/correction_common.py
      12565  simulations/correction_python.py
       9936  simulations/correction_summarize.py
@@ -153,11 +157,12 @@
       3263  simulations/formula.py
       1448  simulations/hc.py
       6267  simulations/hte_designs.py
-     32331  simulations/make_tables.py
+     37278  simulations/make_tables.py
       2016  simulations/run_ablation.py
       2732  simulations/run_bias.py
       7770  simulations/run_example.py
       2470  simulations/run_validation.py
-      3564  simulations/sim.py
+      5355  simulations/run_validation_families.py
+      3654  simulations/sim.py
       4640  verification/crt_correction_certificate.py
      60490  verification/general_p_symbolic_certificate.py

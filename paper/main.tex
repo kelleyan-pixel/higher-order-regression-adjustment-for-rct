@@ -910,6 +910,37 @@ DGP & $D_p$ & $D_p-4G$ & $-(p+1)G$ & drop $-3\mathcal R$ & drop $-Q$ & drop resi
 \end{tabular}}
 \end{table}
 
+\paragraph{Further covariate families and dimensions.}
+The six designs above have $p\le3$ and independent coordinates. To check the formula in higher dimensions and with dependent coordinates, we add four covariate families at $p\in\{2,5,8\}$ (Table \ref{tab:families}). \emph{Gaussian} covariates favor IREG, with $D_p=-(p+1)G$. \emph{Rademacher} covariates, whose kurtosis is one, favor IREG strongly: $K=pI_p$ and $D_p=-(p+3)G$. A symmetric \emph{scale mixture} of normals, in which $2\%$ of units have six times the standard deviation, favors REG through kurtosis alone: $K=(p+2)\tilde\kappa I_p$ with $\tilde\kappa=\EEE[s^4]/\EEE[s^2]^2$ the scale kurtosis, and $D_p=G\{(p+2)\tilde\kappa-(2p+3)\}$. Gaussian covariates with the \emph{quadratic misspecification} $c(X^\top X-\tr\Sigma)$, $c=0.3$ and $\Sigma_{jk}=0.3^{|j-k|}$, favor REG through the misspecification block: $\mathcal E=2c\Sigma$ and $D_p=-(p+1)G+32c^2\tr(\Sigma^2)$. Every family has homoskedastic $N(0,1)$ noise shared by the potential outcomes, and $G=0.49$ ($1.96$ for the Rademacher family). Because both estimators are invariant to invertible linear transformations of the covariates, we simulate whitened covariates; the correlation of $\Sigma$ enters only through $\gamma$ and, for the misspecified family, through $\tr(\Sigma^2)$. The targets are exact. Recomputing them from the matrix form of Theorem \ref{theo:deficiency} with $10^6$ Monte Carlo draws reproduces them to within \gz{fam:matrixcheck:maxrel}\%, the largest discrepancy occurring in the scale mixture, whose fourth moments are hard to estimate even from a million draws; exact targets avoid this source of error. With $n=\gz{fam:n}$ and $B=\gz{fam:B}$ replications per design, every estimate is within \gz{fam:maxabsz} standard errors of its target, and the control variate makes the standard errors \gz{fam:seratio:min} to \gz{fam:seratio:max} times smaller than those of the raw estimator on the same replications. Figure \ref{fig:validation-z} shows the $z$-statistics of all \gz{valall:n} checks (the designs of Table \ref{tab:validation} at $n=3{,}200$ and those of Table \ref{tab:families}), of which \gz{valall:within196} are within $\pm1.96$; the two exceptions are the deviations of Table \ref{tab:validation} discussed above. Figure \ref{fig:validation-rates} shows the estimates against $n$. For the four families at $p=5$ the standard errors stay constant as $n$ grows, and one of the twelve points below $n=\gz{fam:n}$ lies outside $\pm1.96$ standard errors (the scale mixture at $n=1{,}000$, $z=\gz{fam:rate:heavytail1000:z}$), while its neighbors at $n=500$ and $n=2{,}000$ are within $\gz{fam:rate:heavytail:nbr}$ standard errors; with twenty-four family checks, one such deviation is expected under Monte Carlo error.
+
+\begin{table}[htbp]
+\centering
+\caption{Further verification of Theorem \ref{theo:deficiency}: four covariate families at $p\in\{2,5,8\}$, $n=\gz{fam:n}$, $B=\gz{fam:B}$. Targets are exact; estimates are the control-variate estimator with Monte Carlo standard errors in parentheses; the last column is the standard error of the raw estimator on the same replications.}
+\label{tab:families}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Family & $p$ & $D_p$ (exact) & Estimate & $z$ & Raw SE \\
+\midrule
+\tablebody{tables/validation_families_body.tex}
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/validation_z.pdf}
+\caption{$z$-statistics $(\hat D_p-D_p)/\widehat{\mathrm{SE}}$ of the control-variate estimates for the designs of Table \ref{tab:validation} ($n=3{,}200$) and Table \ref{tab:families} ($n=\gz{fam:n}$), sorted by $D_p$ (in parentheses). Dashed lines mark $\pm1.96$.}
+\label{fig:validation-z}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/validation_rates.pdf}
+\caption{Control-variate estimates of $D_p$ against $n$ (log scale) with $\pm1.96$ standard-error bars; the dashed line is the exact $D_p$. The first six panels are the designs of Table \ref{tab:validation} ($n=200$, $800$, $3{,}200$); the last four are the families of Table \ref{tab:families} at $p=5$ ($n=500$ to $\gz{fam:n}$).}
+\label{fig:validation-rates}
+\end{figure}
+
 \paragraph{The CRT correction and the bias decomposition.}
 Theorem \ref{theo:crt_reduction} is checked separately by estimating the $n^{-2}$ constant under both the balanced CRT and Bernoulli$(1/2)$ assignment on the same designs (\texttt{verification/crt\char`\_correction\char`\_certificate.py}): the estimated gap between the two designs is $4.3\pm0.6$ at $n=200$ and $6.3\pm1.6$ at $n=800$ in the Gaussian design, and $3.0\pm1.1$ and $8.6\pm3.0$ in the exponential-covariate design, against the predicted $4G=5$ in both, with all four $|z|<2$. This check uses the raw statistic, because the control variate is derived for the two-independent-samples representation of the CRT, so its power is modest; the ablation in Table \ref{tab:ablation}, which rejects $D_\Bern$ by up to thirty standard errors, is the sharper test. Remark \ref{rema:bias} is checked by estimating the biases of both estimators directly (\texttt{simulations/run\char`\_bias.py}): with $10^6$ replications, at $n=800$ all six estimated biases (REG and IREG in three designs) are within $0.8$ Monte Carlo standard errors of the leading-order predictions; at $n=200$ the all-blocks design deviates by about $11\%$ of the predicted REG bias ($z=9.3$), a gap that has disappeared at $n=800$ ($z=0.4$), consistent with the $O(n^{-2})$ remainder of Lemma \ref{lemm:bias}.
 

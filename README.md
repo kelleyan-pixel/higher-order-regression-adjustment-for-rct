@@ -101,6 +101,7 @@ summary per design (`results/correction/rsum_*.json`), which is sufficient to re
 | Sections 3.4-3.5: heterogeneity sweep (table and figure), combined battery (main and Appendix F tables) | `simulations/hte_designs.py` | `results/hte_sweep.json`, `results/hte_battery.json` |
 | Appendix C tail-sensitivity table; prediction column of the Appendix F sampling table | `simulations/make_tables.py` (closed-form truncated lognormal moments via `run_example.population`) | `paper/tables/tail_body.tex` |
 | Appendix F, log(1+X) check | `r/transform_check.R` | `results/r_transform_check.json` |
+| Appendix B covariate-family table and the two validation figures | `simulations/run_validation_families.py` | `results/validation_families.json` |
 | Appendix B tables; Remark 3 | `run_validation.py`, `run_ablation.py`, `run_bias.py` | `results/validation.json`, `ablation.json`, `bias.json` |
 | Appendix D | `r/validate_estimatr.R`, `simulations/crosscheck_r.py` | `results/r_validation*.json`, `results/r_crosscheck.json` |
 

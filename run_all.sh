@@ -17,6 +17,7 @@ python3 -u verification/crt_correction_certificate.py
 
 echo "=== verification of D_p ==="
 python3 -u simulations/run_validation.py
+python3 -u simulations/run_validation_families.py
 
 echo "=== ablation ==="
 python3 -u simulations/run_ablation.py 3200
