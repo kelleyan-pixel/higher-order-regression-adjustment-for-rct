@@ -99,6 +99,10 @@ def main():
     sweep = ex["sweep"]
     favors_reg = [k for k in ("cexp2_het_null", "cexp2_full", "mixed2_het") if va[k]["formula"] > 0]
     for ok, text in [
+        # Section 3.5: where heterogeneity is large, REG covers less than IREG with the plug-in
+        (all(BA[k]["coverage"]["REG_HC1"] < BA[k]["coverage"]["IREG_HC1c"]
+             and BA[k]["coverage"]["REG_HC3"] < BA[k]["coverage"]["IREG_HC3c"] for k in ("ln15_large", "heavy_high")),
+         "REG is the procedure that undercovers"),
         # Discussion: in the most extreme designs both procedures undercover, and HC3 helps both
         (all(BA[k]["coverage"][m] < 0.95 for k in ("ln15_large", "heavy_high") for m in ("IREG_HC1c", "REG_HC1"))
          and all(BA[k]["coverage"]["IREG_HC3c"] > BA[k]["coverage"]["IREG_HC1c"]

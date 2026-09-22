@@ -1,4 +1,4 @@
-"""Symbolic certificate for the Bernoulli-design constant D_Bern (Theorem 12 of the paper), symbolic p.
+"""Symbolic certificate for the Bernoulli-design constant D_Bern (Theorem 11 of the paper), symbolic p.
 
 Substitutes the derivative tensors of the REG and IREG coefficient maps and the moment blocks of the
 moment vector into the second-order expansion terms, reduces the indexed sums, and checks that the

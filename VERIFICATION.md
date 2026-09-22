@@ -5,11 +5,11 @@ What in the paper is proved, what is verified by computation, and how to check i
 ## Theory
 
 - **Theorem 2** (second-order MSE difference, remainder `O(n^-3)`) holds under Assumption 1 alone. Its proof (Appendix A) uses the
-  two-sample representation of the completely randomized design (Lemma 8), an exact expansion of the
-  conditional expansion MSE at any treatment fraction (Lemma 9), the comparison between the Bernoulli and
-  conditional expansions (Lemma 10), the CRT-to-Bernoulli reduction (Theorem 11) and the Bernoulli calculation
-  (Theorem 12).
-- The index algebra of Theorem 12 is certified symbolically by `verification/general_p_symbolic_certificate.py`
+  two-sample representation of the completely randomized design (Lemma 7), an exact expansion of the
+  conditional expansion MSE at any treatment fraction (Lemma 8), the comparison between the Bernoulli and
+  conditional expansions (Lemma 9), the CRT-to-Bernoulli reduction (Theorem 10) and the Bernoulli calculation
+  (Theorem 11).
+- The index algebra of Theorem 11 is certified symbolically by `verification/general_p_symbolic_certificate.py`
   (zero symbolic remainder for general `p`). Before the main computation it asserts that its hand-coded first
   derivatives of the coefficient maps equal the generic formula `D theta[h] = Omega (db - dA theta)` with
   `theta_R = (0, gamma/2, 0)` and `theta_I = (0, 0, 0, gamma)` (57 components). The CRT shift `D_CRT = D_Bern + 4G` is checked numerically by

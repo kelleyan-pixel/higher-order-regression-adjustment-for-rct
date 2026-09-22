@@ -3,16 +3,16 @@
        511  CITATION.cff
       1085  LICENSE
       7531  README.md
-      3820  VERIFICATION.md
+      3819  VERIFICATION.md
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
      21322  paper/figures/calibration.pdf
      19358  paper/figures/hte_coverage.pdf
      23814  paper/figures/validation_rates.pdf
      22211  paper/figures/validation_z.pdf
-    656781  paper/main.pdf
-    113075  paper/main.tex
-     10797  paper/references.bib
+    657094  paper/main.pdf
+    113675  paper/main.tex
+     10784  paper/references.bib
        672  paper/tables/ablation_body.tex
       1249  paper/tables/calibration_body.tex
        196  paper/tables/correction95_body.tex
@@ -145,7 +145,7 @@
       3259  run_all.sh
        951  run_correction_study.sh
       1168  simulations/check_determinism.py
-     22258  simulations/check_prose_numbers.py
+     22599  simulations/check_prose_numbers.py
       8070  simulations/correction_common.py
      12565  simulations/correction_python.py
       9936  simulations/correction_summarize.py
@@ -156,12 +156,12 @@
       3263  simulations/formula.py
       1448  simulations/hc.py
       6340  simulations/hte_designs.py
-     36910  simulations/make_tables.py
+     36922  simulations/make_tables.py
       2016  simulations/run_ablation.py
       2732  simulations/run_bias.py
       7770  simulations/run_example.py
       2470  simulations/run_validation.py
-      5355  simulations/run_validation_families.py
+      5350  simulations/run_validation_families.py
       3654  simulations/sim.py
       4640  verification/crt_correction_certificate.py
      60490  verification/general_p_symbolic_certificate.py

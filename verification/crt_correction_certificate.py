@@ -1,6 +1,6 @@
-"""Numerical certificate for Theorem 11 (D_CRT = D_Bern + 4G).
+"""Numerical certificate for Theorem 10 (D_CRT = D_Bern + 4G).
 
-The symbolic certificate establishes the Bernoulli constant D_Bern.  Theorem 11
+The symbolic certificate establishes the Bernoulli constant D_Bern.  Theorem 10
 converts it to the completely-randomized design.  This script checks that
 conversion directly: it estimates
 

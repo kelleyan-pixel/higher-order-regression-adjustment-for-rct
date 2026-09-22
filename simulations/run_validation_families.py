@@ -1,4 +1,4 @@
-"""Further verification of Theorem 2: four covariate families of the initial draft at p = 2, 5, 8.
+"""Further verification of Theorem 2: four covariate families at p = 2, 5, 8 (paper Table 7).
 
 Families (whitened coordinates; the estimators are invariant to invertible linear maps of the
 covariates, so the AR(1) correlation of the draft enters only through gamma and, for 'misspec',

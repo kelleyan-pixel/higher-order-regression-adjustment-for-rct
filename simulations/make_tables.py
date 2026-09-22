@@ -389,7 +389,7 @@ VAL_SHORT = {"gauss3_homo": "Gaussian, $p=3$", "cexp2_homo": "Exponential, homos
 
 
 def families_tables():
-    """Appendix B: the four covariate families of the initial draft at p = 2, 5, 8 (results/validation_families.json)."""
+    """Appendix B: the covariate-family table and the two validation figures (results/validation_families.json)."""
     F, V = load("validation_families.json"), load("validation.json")
     vals, rows = {}, []
     for k, d in F["level"].items():
@@ -565,7 +565,7 @@ def diagnostic_tables():
         for n in ("500", "2000"):
             c = ex[s_][n]
             vals[f"valid:s{s_}:n{n}:frac"] = f"{100 * (c['sim'] - 1) / (c['predicted'] - 1):.0f}"
-    # scale-versus-shape diagnostic for s = 2: values quoted in Appendix F (no table body; the table was cut)
+    # scale-versus-shape diagnostic for s = 2: the values quoted in Appendix F (no table body; the paper reports them in prose)
     st = S["lognormal_s2.0_prop"]["studentized"]
     lv = ["0.80", "0.90", "0.95", "0.98", "0.99"]
     for lab, name in (("IREG_HC1", "IREG, HC1"), ("IREG_HC3", "IREG, HC3"), ("REG_HC1", "REG, HC1")):
