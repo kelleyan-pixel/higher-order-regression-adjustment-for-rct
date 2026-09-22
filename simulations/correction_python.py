@@ -149,7 +149,7 @@ def run_prev(name, n, p, reps, seed, chunk=250, tau=1.0):
 
 
 def truth_prev(name, p):
-    """gamma, Sigma_X, G, V* = G + 4 E[eps^2], PATE for the previous-release designs."""
+    """gamma, Sigma_X, G, V* = G + 4 E[eps^2], PATE for the correction-study designs."""
     gam = np.zeros(p); gam[0] = GSTAR[name]
     if name in ("large_hte", "misspec"):
         S = 0.5 ** np.abs(np.subtract.outer(np.arange(p), np.arange(p)))

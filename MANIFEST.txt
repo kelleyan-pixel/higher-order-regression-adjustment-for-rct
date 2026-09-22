@@ -1,23 +1,27 @@
-# Files in this release (154 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
+# Files in this release (161 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
        135  .gitignore
        510  CITATION.cff
       1085  LICENSE
-      6876  README.md
+      7280  README.md
       3820  VERIFICATION.md
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
      21322  paper/figures/calibration.pdf
-    557248  paper/main.pdf
-    116725  paper/main.tex
+     19358  paper/figures/hte_coverage.pdf
+    584481  paper/main.pdf
+    117154  paper/main.tex
      10797  paper/references.bib
        672  paper/tables/ablation_body.tex
       1249  paper/tables/calibration_body.tex
        196  paper/tables/correction95_body.tex
-      1075  paper/tables/gamma0_other_body.tex
+      1005  paper/tables/gamma0_other_body.tex
        646  paper/tables/gamma0_rare_body.tex
-       391  paper/tables/gamma0_skew_body.tex
-     71491  paper/tables/gamma0_values.tex
+     96152  paper/tables/gamma0_values.tex
        441  paper/tables/gamma0_width_body.tex
+       708  paper/tables/hte_battery_body.tex
+       681  paper/tables/hte_battery_supp_body.tex
+       469  paper/tables/hte_sweep_body.tex
+       634  paper/tables/null_main_body.tex
        528  paper/tables/sampling_body.tex
        831  paper/tables/scale_body.tex
        239  paper/tables/tail_body.tex
@@ -81,6 +85,8 @@
       1122  results/crt_correction.json
        189  results/env.json
       4753  results/example.json
+     11999  results/hte_battery.json
+      8118  results/hte_sweep.json
        303  results/r_crosscheck.json
       7658  results/r_datasets/gauss_misspec_01.csv
       4464  results/r_datasets/gauss_misspec_01.json
@@ -132,10 +138,10 @@
        840  results/r_validation.json
       1786  results/r_validation_estimatr2.json
       3119  results/validation.json
-      3171  run_all.sh
+      3209  run_all.sh
        951  run_correction_study.sh
       1168  simulations/check_determinism.py
-     15520  simulations/check_prose_numbers.py
+     18071  simulations/check_prose_numbers.py
       8070  simulations/correction_common.py
      12565  simulations/correction_python.py
       9936  simulations/correction_summarize.py
@@ -145,7 +151,8 @@
        756  simulations/env_report.py
       3263  simulations/formula.py
       1448  simulations/hc.py
-     24124  simulations/make_tables.py
+      4525  simulations/hte_designs.py
+     29467  simulations/make_tables.py
       2016  simulations/run_ablation.py
       2732  simulations/run_bias.py
       7770  simulations/run_example.py

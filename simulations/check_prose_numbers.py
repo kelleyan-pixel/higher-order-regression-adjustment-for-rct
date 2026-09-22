@@ -11,6 +11,7 @@ Usage: python simulations/check_prose_numbers.py
 import json, os, math, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from run_example import population as population_
+from scipy.stats import norm
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 R = lambda f: json.load(open(os.path.join(ROOT, "results", f)))
@@ -31,9 +32,6 @@ def main():
     s08 = ex["sweep"]["0.8"]
     checks = [
         # (recomputed string, exact text that must appear in main.tex)
-        (f"{hr['population']['skew']:.0f}", "skewness $136$"),
-        (f"{hr['population']['Delta'] / 1e4:.1f}", "3.9\\times10^4"),
-        (f"{hr['500']['predicted']:.1f}", "ratio of $78.5$"),
         (f"{hr['500']['sim']:.2f}", "ratio is $1.68$"),
         (f"{hr['2000']['sim']:.2f}", "$1.34$ at $n=2{,}000$"),
         (f"{hr['8000']['sim']:.2f}", "$1.19$ at $n=8{,}000$"),
@@ -78,6 +76,9 @@ def main():
         "by up to thirty standard errors": lambda v: 28 <= float(v) <= 32,
         "3.9\\times10^4": lambda v: v == "3.9",
     }
+    _res = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results")
+    SW = json.load(open(os.path.join(_res, "hte_sweep.json")))["designs"]
+    BA = json.load(open(os.path.join(_res, "hte_battery.json")))["designs"]
     rho_, m_ = 0.02, 250
     q0_, q1_ = (1 - rho_) ** m_, m_ * rho_ * (1 - rho_) ** (m_ - 1)
     lev_th, rd_th = q1_ * (2 * (1 - q0_) - q1_), 1 - (1 - q0_) ** 2
@@ -108,9 +109,6 @@ def main():
          "the feasible and oracle intervals are close to nominal at every level"),
         (all(cal(d, "IREG_HC1c", "0.80") < 80 and cal(d, "IREG_HC1c", "0.99") > 99 for d in (hte, g0)),
          "is a crossing point rather than evidence of a calibrated procedure"),
-        (all(cal(g0, "IREG_HC1c", l) < 100 * float(l) for l in ("0.80", "0.90"))
-         and all(cal(g0, "IREG_HC1c", l) > 100 * float(l) for l in ("0.98", "0.99")),
-         "That agreement with nominal is a crossing point, not calibration"),
         (abs(W(big)["median_width_ratio_uncorrected_misses"] - W(big)["median_width_ratio_uncorrected_covers"]) < 0.02,
          "the lengthening is nearly uniform"),
         (all(W(d)["median_width_ratio_uncorrected_misses"] > 1.3 and W(d)["median_width_ratio_uncorrected_covers"] < 1.1
@@ -119,9 +117,6 @@ def main():
          "ranges from a few observations to more than a hundred in our scalar designs with skewed covariates"),
         (abs(sweep["1.0"]["8000"]["predicted"] - sweep["1.0"]["8000"]["sim"]) < abs(sweep["1.0"]["500"]["predicted"] - sweep["1.0"]["500"]["sim"]),
          "but the agreement improves with $n$"),
-        (len(favors_reg) >= 2, "in several of our skewed, heteroskedastic designs it favors REG"),
-        (C[big]["truth"]["R2_tau"] > 0.5 and (C[big]["p"] + 1) * C[big]["truth"]["R2_tau"] < 10,
-         "a real but modest second-order gain"),
         # Section 3.3-3.4 diagnostics
         (all(abs(C[f"lognormal_s{s_}_prop"]["median_width_95"]["IREG_HC1"] / C[f"lognormal_s{s_}_prop"]["median_width_95"]["REG_HC1"] - 1) < 0.03
              for s_ in ("0.6", "0.8", "1.0", "1.2", "1.5", "1.8", "2.0")), "The median HC1 widths of IREG and REG are nearly equal throughout"),
@@ -163,11 +158,40 @@ def main():
         (abs((lambda e2, e8, e32: e32 + (e32 - e8) * ((e32 - e8) / (e8 - e2)) / (1 - (e32 - e8) / (e8 - e2)))(
              full["est"]["200"]["cv"], full["est"]["800"]["cv"], full["est"]["3200"]["cv"]) - full["formula"]) < 1.0,
          "which extrapolates to about"),
-        (ex["intro_population"]["R2tau"] == 0 and ex["intro_coverage"]["IREG+HC1"][0] < ex["intro_coverage"]["REG+HC1"][0] - 0.01,
-         "but IREG with HC1 covers it in only"),
-        (all(ex["intro_ratio"][n]["predicted"] > ex["intro_ratio"][n]["sim"] > 1 for n in ("500", "2000", "8000"))
-         and abs(ex["intro_ratio"]["8000"]["predicted"] - ex["intro_ratio"]["8000"]["sim"]) < abs(ex["intro_ratio"]["500"]["predicted"] - ex["intro_ratio"]["500"]["sim"]),
-         "overstates this gap, but the two converge as $n$ grows"),
+        # introduction (typed numbers)
+        (f"{100 * (ex['intro_ratio']['500']['sim'] - 1):.1f}", "by $6.7\\%$ at $n=500$"),
+        (f"{ex['intro_population']['Delta']:.0f}", "around $83$ users"),
+        (f"{100 * ex['intro_coverage']['IREG+HC1'][0]:.1f}", "undercovers at $93.5\\%$"),
+        (f"{ex['intro_population']['skew']:.1f}", "skewness $8.2$"),
+        (ex["intro_coverage"]["IREG+HC3"][0] > 0.945 and all(abs(ex["intro_coverage"][k][0] - 0.95) < 0.01 for k in ("REG+HC1", "REG+HC3")),
+         "(fixed by switching to HC3); meanwhile, simple regression is well-calibrated"),
+        # Section 3.3
+        (all(R("r_gamma0_skew.json")[f"lognormal_s{s_}_prop"]["IREG_HC3"]["all"]["coverage"] - R("r_gamma0_skew.json")[f"lognormal_s{s_}_prop"]["IREG_HC1"]["all"]["coverage"] > 0.03 for s_ in ("1.5", "1.8", "2.0"))
+         and all(R("r_gamma0_skew.json")[f"lognormal_s{s_}_prop"]["IREG_HC3"]["all"]["coverage"] < 0.945 for s_ in ("1.8", "2.0")),
+         "HC3 substantially improves IREG's coverage"),
+        (C[g0]["sampling"]["mse_ratio"] > 1.5, "yet IREG's MSE exceeds REG's by a factor of"),
+        # Section 3.4
+        (all(abs(v - 0.95) < 0.01 for v in SW["R2_0.00"]["coverage"].values()), "With $R^2_\\tau=0$ every interval is close to nominal"),
+        (all(abs(d["coverage"]["IREG_HC1"] - (2 * norm.cdf(1.96 * math.sqrt(1 - d["R2_tau"])) - 1)) < 0.01 for d in SW.values()),
+         "tracking its asymptotic coverage"),
+        (0 <= SW["R2_0.90"]["coverage"]["IREG_HC3"] - SW["R2_0.90"]["coverage"]["IREG_HC1"] < 0.01, "barely more than HC1"),
+        (all(d["coverage"]["IREG_HC1"] < d["coverage"]["IREG_HC1o"] - 0.005 for k, d in SW.items() if k != "R2_0.00")
+         and all(abs(d["coverage"]["IREG_HC1o"] - 0.95) < 0.01 for d in SW.values()), "The oracle correction restores nominal coverage at every level"),
+        # Section 3.5
+        (all(abs(BA[k][m]["coverage"] if False else BA[k]["coverage"][m] - 0.95) < 0.01 for k in ("gauss_low", "gauss_high") for m in ("IREG_HC1c", "REG_HC1")),
+         "In the Gaussian designs both procedures are close to nominal"),
+        (BA["skew_null"]["coverage"]["IREG_HC1c"] > BA["skew_null"]["coverage"]["IREG_HC1"], "the correction raises IREG's coverage from"),
+        (BA["skew_low"]["coverage"]["IREG_HC1"] > BA["skew_mid"]["coverage"]["IREG_HC1"] > BA["skew_high"]["coverage"]["IREG_HC1"]
+         and all(abs(BA[k]["coverage"]["IREG_HC1c"] - BA[k]["coverage"]["IREG_HC1o"]) < 0.005 for k in ("skew_low", "skew_mid", "skew_high")),
+         "the feasible correction restores"),
+        (min(BA[k]["coverage"]["REG_HC1"] for k in ("skew_low", "skew_mid")) > 0.945 and BA["skew_high"]["coverage"]["REG_HC1"] < 0.94,
+         "REG+HC1 stays near nominal at small and moderate heterogeneity"),
+        (BA["heavy_high"]["coverage"]["REG_HC1"] < 0.93 and BA["heavy_high"]["coverage"]["REG_HC1"] < BA["heavy_high"]["coverage"]["IREG_HC1c"],
+         "The heavy-tailed designs show the mechanisms compounding"),
+        (BA["rare"]["coverage"]["IREG_HC1c"] < 0.945 and BA["rare"]["coverage"]["IREG_HC1c"] > BA["rare"]["coverage"]["IREG_HC1"], "still below nominal"),
+        (min(BA[k]["mse_ratio"] for k in ("skew_null", "skew_low", "heavy_low")) > 1.02 and all(abs(BA[k]["mse_ratio"] - 1) < 0.01 for k in ("gauss_low", "gauss_high", "skew_high"))
+         and BA["heavy_high"]["mse_ratio"] > 1.05 and BA["rare"]["mse_ratio"] < 0.98,
+         "IREG remains less precise in the heavy-tailed design even with large heterogeneity"),
         (C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] < 0.80 and C[g0]["calibration"]["0.99"]["REG_HC1"]["coverage"] > 0.99
          and C[g0]["studentized"]["REG_HC1"]["levels"]["0.80"]["quantile_ratio"] > 1 > C[g0]["studentized"]["REG_HC1"]["levels"]["0.99"]["quantile_ratio"]
          and abs(C[g0]["calibration"]["0.80"]["IREG_HC3"]["coverage"] - 0.80) < abs(C[g0]["calibration"]["0.80"]["REG_HC1"]["coverage"] - 0.80),

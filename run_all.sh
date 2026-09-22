@@ -45,6 +45,7 @@ echo "=== diagnostic: standard vs superpopulation-corrected IREG intervals (same
 Rscript r/correction_sim.R
 python3 -u simulations/correction_python.py example
 python3 -u simulations/correction_python.py prev
+python3 -u simulations/hte_designs.py
 python3 simulations/correction_summarize.py
 
 echo "=== determinism checks (Python and R) ==="

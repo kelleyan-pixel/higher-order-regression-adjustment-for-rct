@@ -95,12 +95,13 @@ summary per design (`results/correction/rsum_*.json`), which is sufficient to re
 |---|---|---|
 | Theorem 12 (index algebra) | `verification/general_p_symbolic_certificate.py` | prints the certificate; zero remainder |
 | Theorem 11 check | `verification/crt_correction_certificate.py` | `results/crt_correction.json` |
-| Introductory example, Table 9 | `simulations/run_example.py` | `results/example.json` |
-| Tables 1, 2, 6 | `r/gamma0_sim.R` | `results/r_gamma0_*.json` |
-| Tables 3, 4, 5; Tables 11, 12 and Figure 1 | `r/correction_sim.R`, `simulations/correction_python.py`, `simulations/correction_summarize.py` | `results/correction_summary.*`, `results/calibration.csv` |
-| Table 10 (tail sensitivity), prediction column of Table 4 | `simulations/make_tables.py` (closed-form truncated lognormal moments via `run_example.population`) | `paper/tables/tail_body.tex` |
-| Section 3.3, log(1+X) check | `r/transform_check.R` | `results/r_transform_check.json` |
-| Tables 7, 8; Remark 3 | `run_validation.py`, `run_ablation.py`, `run_bias.py` | `results/validation.json`, `ablation.json`, `bias.json` |
+| Introductory example; Appendix C validity table | `simulations/run_example.py` | `results/example.json` |
+| Section 3.3 table (coverage); Appendix F further-designs, scale-versus-shape and leverage-one tables | `r/gamma0_sim.R` | `results/r_gamma0_*.json` |
+| Section 3.3 widths and MSE ratios; Appendix E tables and calibration figure; Appendix F sampling and HC3/HC1 tables | `r/correction_sim.R`, `simulations/correction_python.py`, `simulations/correction_summarize.py` | `results/correction_summary.*`, `results/calibration.csv` |
+| Sections 3.4-3.5: heterogeneity sweep (table and figure), combined battery (main and Appendix F tables) | `simulations/hte_designs.py` | `results/hte_sweep.json`, `results/hte_battery.json` |
+| Appendix C tail-sensitivity table; prediction column of the Appendix F sampling table | `simulations/make_tables.py` (closed-form truncated lognormal moments via `run_example.population`) | `paper/tables/tail_body.tex` |
+| Appendix F, log(1+X) check | `r/transform_check.R` | `results/r_transform_check.json` |
+| Appendix B tables; Remark 3 | `run_validation.py`, `run_ablation.py`, `run_bias.py` | `results/validation.json`, `ablation.json`, `bias.json` |
 | Appendix D | `r/validate_estimatr.R`, `simulations/crosscheck_r.py` | `results/r_validation*.json`, `results/r_crosscheck.json` |
 
 ## Limitations
