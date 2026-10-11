@@ -12,6 +12,9 @@ reported uncorrected coverages:
 * ``example``: the introductory example and its heavy-tailed variant of the current
   paper (p = 1, n = 500, 100,000 replications), copied from run_example.py.
 
+Both engines also compute the delete-one jackknife standard error (``jackknife`` below) on the
+same datasets; it draws no random numbers, so all other outputs are unchanged by it.
+
 Usage: python simulations/correction_python.py [prev|example]
 Output: results/correction/py_<design>.json (design-level summaries)
 """
@@ -115,23 +118,57 @@ def fit(D, Y, col):
     return coef, se, lev.any(1), ok
 
 
+def jackknife(D, Y, col, delta_cols=None, Xc=None):
+    """Delete-one jackknife standard error, eq. (12) of the paper, for a batch of OLS fits.
+
+    REG: tau = coefficient `col`.  IREG (pass `delta_cols` and the covariates `Xc` centred at the
+    full-sample mean, as in D): tau_(-i) = theta_col(-i) + (Xbar_(-i) - Xbar)' delta_(-i), i.e. the
+    interacted fit recentred at the leave-one-out mean, with Xbar_(-i) - Xbar = -Xc_i / (n - 1).
+    Leave-one-out coefficients use the exact deletion formula
+        theta_(-i) = theta - (D'D)^{-1} d_i e_i / (1 - h_ii).
+    A leave-one-out fit with h_ii = 1 (1 - h_ii <= LEV_TOL) is rank deficient and its estimate is
+    undefined; it is omitted from the jackknife sum (the jackknife over the defined leave-one-out
+    estimates, n_def of them).  Returns (se, number of omitted leave-one-out fits) per dataset.
+    No random numbers are drawn, so adding this to a simulation leaves every other output unchanged."""
+    B, n, k = D.shape
+    with np.errstate(all="ignore"):
+        A = np.linalg.pinv(np.einsum("bij,bik->bjk", D, D))
+        coef = np.einsum("bjk,bik,bi->bj", A, D, Y)
+        res = Y - np.einsum("bij,bj->bi", D, coef)
+        AD = np.einsum("bjk,bik->bji", A, D)                     # (B, k, n): rows of (D'D)^{-1} D'
+        h = np.einsum("bij,bji->bi", D, AD)
+        deg = (1.0 - h) <= LEV_TOL
+        r = res / np.where(deg, 1.0, 1.0 - h)
+        tl = coef[:, col, None] - AD[:, col, :] * r                # theta_col(-i)
+        if delta_cols is not None:
+            dl = coef[:, delta_cols, None] - AD[:, delta_cols, :] * r[:, None, :]   # (B, p, n)
+            tl = tl - np.einsum("bip,bpi->bi", Xc, dl) / (n - 1)
+        tl = np.where(deg, np.nan, tl)
+        m = (~deg).sum(1)
+        tbar = np.nanmean(tl, 1)
+        v = (m - 1) / m * np.nansum((tl - tbar[:, None]) ** 2, 1)
+    return np.sqrt(v), deg.sum(1)
 
 
 def run_prev(name, n, p, reps, seed, chunk=250, tau=1.0):
     """Same loop, chunking and draw order as the original simulate() for these designs."""
     rng = np.random.default_rng(seed)
     keys = ["R_est", "R_se1", "R_se3", "I_est", "I_se1", "I_se2", "I_se3", "plug", "lev1", "rankdef",
-            "I_okc"]
+            "I_okc", "R_sejk", "I_sejk", "R_jkdeg", "I_jkdeg"]
     acc = {k: [] for k in keys}
     done = 0
     while done < reps:
         B = min(chunk, reps - done)
         X, W, Y, sate = dgp(rng, name, B, n, p, tau)
         one = np.ones((B, n, 1))
-        cR, sR, levR, okR = fit(np.concatenate([one, X, W[..., None]], -1), Y, p + 1)
+        DR = np.concatenate([one, X, W[..., None]], -1)
+        cR, sR, levR, okR = fit(DR, Y, p + 1)
         Xc = X - X.mean(1, keepdims=True)
         DI = np.concatenate([one, Xc, W[..., None], W[..., None] * Xc], -1)
         cI, sI, levI, okI = fit(DI, Y, p + 1)
+        jR, dR = jackknife(DR, Y, p + 1)
+        jI, dI = jackknife(DI, Y, p + 1, delta_cols=list(range(p + 2, 2 * p + 2)), Xc=Xc)
+        acc["R_sejk"].append(jR); acc["I_sejk"].append(jI); acc["R_jkdeg"].append(dR); acc["I_jkdeg"].append(dI)
         Sx = np.einsum("bij,bik->bjk", Xc, Xc) / (n - 1)
         delta = cI[:, p + 2:]
         acc["plug"].append(np.einsum("bj,bjk,bk->b", delta, Sx, delta) / n)
@@ -184,7 +221,8 @@ def run_example(sx, c, g, n, reps, seed, chunk=1000):
     """Same draws as run_example.coverage(); adds HC2c/HC3c and the plug-in itself."""
     rng = np.random.default_rng(seed)
     m, tau = n // 2, 1.0 + g * np.exp(sx ** 2 / 2)
-    acc = {k: [] for k in ["R_est", "R_se1", "R_se3", "I_est", "I_se1", "I_se2", "I_se3", "plug"]}
+    acc = {k: [] for k in ["R_est", "R_se1", "R_se3", "I_est", "I_se1", "I_se2", "I_se3", "plug",
+                           "R_sejk", "I_sejk", "R_jkdeg", "I_jkdeg"]}
     for _ in range(reps // chunk):
         B = chunk
         X = np.exp(sx * rng.standard_normal((B, n)))
@@ -204,6 +242,10 @@ def run_example(sx, c, g, n, reps, seed, chunk=1000):
             if lab == "I":
                 acc["I_se2"].append(np.sqrt(np.einsum("bi,bi->b", cvec ** 2, res ** 2 / (1 - h))))
                 acc["plug"].append(coef[:, 3] ** 2 * np.var(X, 1, ddof=1) / n)
+                sj, dj = jackknife(D, Y, 2, delta_cols=[3], Xc=Xc[..., None])
+            else:
+                sj, dj = jackknife(D, Y, 2)
+            acc[lab + "_sejk"].append(sj); acc[lab + "_jkdeg"].append(dj)
     a = {k: np.concatenate(v) for k, v in acc.items()}
     a["R_df"] = np.full(reps, float(n - 3)); a["I_df"] = np.full(reps, float(n - 4))
     a["R_q"] = stats.t.ppf(0.975, a["R_df"]); a["I_q"] = stats.t.ppf(0.975, a["I_df"])

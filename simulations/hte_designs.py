@@ -1,5 +1,9 @@
-"""Section 3.4 and 3.5 simulations: a controlled treatment-effect-heterogeneity sweep and a battery of
-designs in which finite-sample leverage effects and the superpopulation component G/n can coexist.
+"""Section 3 simulations (Tables 1 and 2): a battery of designs in which finite-sample leverage effects and
+the superpopulation component G/n can coexist, and a controlled treatment-effect-heterogeneity sweep
+(supplementary; not reported in the current paper).
+
+Intervals: IREG with HC1 plus the plug-in correction, IREG and REG with HC1 and HC3, and IREG and REG
+with the delete-one jackknife of eq. (12) (correction_python.jackknife), all on the same datasets.
 
 Both reuse the correction-study engine of correction_python.py (covariates, noise, balanced complete
 randomization, OLS with HC1/HC3, the plug-in term) and change only the treatment-effect slope gamma*
@@ -50,7 +54,8 @@ def summarize(a, tr, n):
     se = {"IREG_HC1": a["I_se1"], "IREG_HC3": a["I_se3"],
           "IREG_HC1c": np.sqrt(a["I_se1"] ** 2 + a["plug"]), "IREG_HC1o": np.sqrt(a["I_se1"] ** 2 + Gn),
           "IREG_HC3c": np.sqrt(a["I_se3"] ** 2 + a["plug"]),
-          "REG_HC1": a["R_se1"], "REG_HC3": a["R_se3"]}
+          "REG_HC1": a["R_se1"], "REG_HC3": a["R_se3"],
+          "IREG_JK": a["I_sejk"], "REG_JK": a["R_sejk"]}         # delete-one jackknife, eq. (12)
     out = {"coverage": {}, "mcse": {}, "median_width": {}, "calibration": {f"{L:.2f}": {} for L in LEVELS}}
     for k, s in se.items():
         est, q = (a["R_est"], a["R_q"]) if k.startswith("REG") else (a["I_est"], a["I_q"])
@@ -73,6 +78,18 @@ def summarize(a, tr, n):
     out["plug_mean"] = float(np.nanmean(a["plug"]))
     out["frac_rank_deficient"] = float(np.mean(a["rankdef"])) if "rankdef" in a else 0.0
     out["frac_leverage_one"] = float(np.mean(a["lev1"] & a.get("I_okc", np.ones_like(a["lev1"])))) if "lev1" in a else 0.0
+    # jackknife: replications in which some leave-one-out fit is rank deficient (omitted from the sum),
+    # and coverage of the 95% jackknife interval within and outside them
+    out["jackknife"] = {}
+    for lab, e in (("I", "IREG"), ("R", "REG")):
+        deg = a[lab + "_jkdeg"] > 0
+        est, q, s_ = a[lab + "_est"], a[lab + "_q"], a[lab + "_sejk"]
+        ok = np.isfinite(est) & np.isfinite(s_)
+        cov = np.where(ok, np.abs(est - tau) <= q * s_, False)
+        out["jackknife"][e] = {"frac_reps_degenerate_loo": float(deg.mean()),
+                               "coverage_reps_degenerate_loo": float(cov[deg].mean()) if deg.any() else None,
+                               "coverage_other_reps": float(cov[~deg].mean()),
+                               "n_reps_degenerate_loo": int(deg.sum())}
     return out
 
 

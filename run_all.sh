@@ -42,11 +42,12 @@ for g in skew misspec nsweep p5 rare; do Rscript r/gamma0_sim.R "$g"; done
 Rscript r/gamma0_sim.R rare --lib="$LIB2" --tag=_estimatr2
 Rscript r/transform_check.R                         # log(1+X) check on the s = 2 datasets
 
-echo "=== diagnostic: standard vs superpopulation-corrected IREG intervals (same datasets) ==="
+echo "=== inference simulations: superpopulation correction, Section 3 designs, jackknife ==="
 Rscript r/correction_sim.R
 python3 -u simulations/correction_python.py example
 python3 -u simulations/correction_python.py prev
-python3 -u simulations/hte_designs.py
+python3 -u simulations/hte_designs.py            # Section 3: Tables 1-2 (HC1, plug-in, jackknife)
+python3 -u simulations/check_jackknife.py        # jackknife deletion formula against refitting
 python3 simulations/correction_summarize.py
 
 echo "=== determinism checks (Python and R) ==="

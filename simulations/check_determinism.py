@@ -13,10 +13,12 @@ sys.path.insert(0, ".")
 from sim import run
 from dgps import DGPS
 from run_example import mse_ratio
+from correction_python import run_prev
 import numpy as np
 out = {
   "validation": [float(x) for x in np.concatenate(run(DGPS["cexp2_full"], 200, 2000, 1000, seed=12))[:50]],
   "example": mse_ratio(0.8, 2.0, 0.4, 500, 4000, seed=13),
+  "jackknife": [float(x) for x in run_prev("rare_extreme", 200, 5, 60, seed=14)["I_sejk"][:30]],
 }
 print(json.dumps(out, sort_keys=True))
 '''
