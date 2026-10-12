@@ -45,9 +45,7 @@ def main():
         # (recomputed string, exact text that must appear in main.tex)
         # --- introduction
         (f"{100 * (ex['intro_ratio']['500']['sim'] - 1):.1f}", "by $6.7\\%$ at $n=500$"),
-        (f"{100 * (ex['intro_ratio']['500']['sim'] - 1):.1f}", "against the simulated\n$6.7\\%$"
-         if "against the simulated\n$6.7\\%$" in TEX else "against the simulated $6.7\\%$"),
-        (f"{ex['intro_population']['Delta']:.0f}", "additional sample size of 83"),
+        (f"{ex['intro_population']['Delta']:.0f}", "expansion-MSE deficiency is 83 observations"),
         # --- Appendix C
         (f"{hr['500']['sim']:.2f}", "simulated MSE ratios of $1.68$"),
         (f"{hr['2000']['sim']:.2f}", "$1.68$, $1.34$, and"),
@@ -124,15 +122,15 @@ def main():
     qual = [
         # --- Section 3.1: jackknife implementation and cross-check of the NumPy engine
         (R("jackknife_check.json")["max_rel_gap"] < 1e-10 and R("jackknife_check.json")["omitted_loo_fits"] > 0,
-         "agrees with refitting to machine precision"),
-        (max(R("r_crosscheck.json")["max_rel_gap"].values()) < 1e-8, "reproduces \\texttt{estimatr}'s estimates and standard errors"),
+         "The jackknife uses the exact deletion formula for least squares"),
+        (max(R("r_crosscheck.json")["max_rel_gap"].values()) < 1e-8, "confirms agreement of estimates, standard errors, degrees of freedom"),
         (all(BA[k]["plug_mean"] > 0 for k in BA) and all(BA[k]["plug_over_Gn"] > 1 for k in BA if BA[k]["plug_over_Gn"] is not None),
          "is biased upward"),
         # --- Section 3.2
         (all(abs(BA[k]["mse_ratio"] - 1) < 3 * BA[k]["mse_ratio_mcse"] or BA[k]["mse_ratio"] > 1 for k in SMALL),
          "REG is also at least as precise a point estimator in these designs"),
         (all(BA[k]["coverage"]["IREG_HC1"] < BA[k]["coverage"]["IREG_HC1c"] - 0.01 and BA[k]["plug_over_Gn"] > 4 for k in SKEWED_SMALL),
-         "for IREG this partly reflects the plug-in, whose upward bias offsets"),
+         "the upward bias of the plug-in partly offsets"),
         (all(BA[k]["coverage"]["REG_JK"] > 0.96 for k in ("ln15_small", "heavy_ex", "ln20_small")),
          "under the heaviest tails it is conservative"),
         (all(BA[k]["coverage"][m] < 0.94 for k in ("ln15_mid", "ln15_large") for m in ("REG_HC1", "REG_JK"))
@@ -146,18 +144,18 @@ def main():
          "HC1 intervals are close to nominal at $95\\%$ and $99\\%$ but undercover at $80\\%$ in the skewed designs"),
         (max(L_ - cal(k, f"{L_:.2f}", m) for k in SMALL for m in ("IREG_JK", "REG_JK") for L_ in (0.80, 0.95, 0.99))
          <= 2 * math.sqrt(0.8 * 0.2 / 20000),
-         "at or above nominal coverage, up to Monte Carlo error, in all of our low-heterogeneity designs"),
+         "With JK, neither estimator is more than"),
         (max(L_ - cal(k, f"{L_:.2f}", "REG_JK") for k in SMALL for L_ in (0.80, 0.95, 0.99)) <= 2 * math.sqrt(0.8 * 0.2 / 20000),
          "reaches nominal coverage, up to Monte Carlo error, at every level we examine"),
         (BA["ln15_large"]["coverage"]["IREG_JK"] < 0.92 and BA["heavy_high"]["coverage"]["REG_JK"] < 0.94,
-         "but it still undercovers when large treatment-effect heterogeneity meets skewed covariates"),
+         "REG undercovers with either variance estimator"),
         (max(BA["ln15_large"]["coverage"][m] for m in ("IREG_HC1c", "IREG_JK", "REG_HC1", "REG_JK")) < 0.93,
-         "no procedure reaches nominal coverage in the most extreme of our designs"),
+         "no procedure reaches nominal coverage in the most extreme designs"),
         (all(abs(cal(k, "0.95", m) - 0.95) <= 0.02 for k in SMALL for m in ("IREG_HC1c", "REG_HC1"))
          and min(cal(k, "0.80", "IREG_HC1c") for k in SMALL) < 0.76,
-         "IREG with HC1 and the plug-in correction matches REG+HC1 at the $95\\%$ level but is miscalibrated across nominal levels"),
+         "but is miscalibrated across nominal levels"),
         (all(abs(cal(k, "0.95", m) - 0.95) <= 0.02 for k in SMALL for m in ("IREG_HC1c", "REG_HC1")),
-         "in our low-heterogeneity designs they are close to nominal at the $95\\%$ level"),
+         "HC1 intervals are close to nominal at $95\\%$ and $99\\%$"),
         (all(cal(k, "0.99", m) >= 0.983 for k in SMALL for m in ("IREG_HC1c", "REG_HC1")), "is partly a crossing point"),
         (all(BA[k]["group"] == "small" for k in SMALL) and all(BA[k]["R2_tau"] < 0.05 for k in SMALL), "small ($<0.05$)"),
         # --- Appendix B
@@ -201,9 +199,15 @@ def main():
     for ok, text in qual:
         checks.append(("ok" if ok else "FAILED", text))
         expected[text] = lambda v: v == "ok"
+    implementation_anchors = {
+        "The jackknife uses the exact deletion formula for least squares",
+        "confirms agreement of estimates, standard errors, degrees of freedom",
+    }
+    verification = open(os.path.join(ROOT, "VERIFICATION.md")).read()
     bad = []
     for val, text in checks:
-        if text not in TEX:
+        document = verification if text in implementation_anchors else TEX
+        if text not in document:
             bad.append(f"text not found in main.tex: {text!r}")
             continue
         ok = expected[text](val) if text in expected else (val.lstrip("+") in text.replace("{,}", ","))

@@ -1,8 +1,10 @@
 # Higher-Order Asymptotics of Regression-Adjusted Estimators in Randomized Trials
 
 Replication package for Anna Kelley and Stefan Wager, *Higher-Order Asymptotics of Regression-Adjusted
-Estimators in Randomized Trials*. The paper is `paper/main.pdf` (source `paper/main.tex`). This release
-(v1.1.0) matches the arXiv version: Sections 1–4 and Appendices A–D.
+Estimators in Randomized Trials*. The current manuscript source is `paper/main.tex`, with Sections 1 through 4 and Appendices A through D.
+The source includes the targeted submission qualifications and reporting clarifications. The previous
+compiled PDF has been removed because it predates these edits; rebuild and inspect `paper/main.pdf`
+before submission. A clean compile of this updated source has not yet been verified.
 
 ## Contents of the paper
 
@@ -21,7 +23,7 @@ Estimators in Randomized Trials*. The paper is `paper/main.pdf` (source `paper/m
 ## Layout
 
 ```
-paper/            main.tex, references.bib, main.pdf; tables/ and figures/ are generated
+paper/            main.tex, references.bib; main.pdf is built locally; tables/ and figures/ are generated
 verification/     symbolic certificate for Theorem 10; numerical check of Theorem 9
 simulations/      Python: D_p verification, examples, inference simulations, cross-checks, table builder
   formula.py dgps.py sim.py            exact D_p, analytic designs, control-variate engine

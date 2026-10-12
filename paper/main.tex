@@ -60,7 +60,7 @@
 \newtheorem{rema}[prop]{Remark}
 
 \author{Anna Kelley\thanks{Stanford University.} \and Stefan Wager\thanks{Stanford University.}}
-\date{September 2026}
+\date{October 2026}
 \title{Higher-Order Asymptotics of \\ Regression-Adjusted Estimators in Randomized Trials\thanks{Code, simulation scripts and the computational certificates used in the proofs: \url{https://github.com/kelleyan-pixel/higher-order-regression-adjustment-for-rct}.}}
 
 \begin{document}
@@ -68,7 +68,7 @@
 \maketitle
 
 \begin{abstract}
-Regression adjustment is widely used to improve the precision of average treatment effect estimates from randomized controlled trials. In the important case of equally balanced trials, simple regression and interacted regression have the same first-order variance, meaning the optimal estimator is determined by higher-order terms. We derive a closed-form expression for the second order difference in their mean squared error under complete randomization and superpopulation sampling, and show that this difference, divided by the common first-order variance, is the asymptotic effective sample size loss from using the less efficient estimator. We decompose the expression into interpretable effects from covariate shape, treatment-effect heterogeneity, heteroskedasticity, and nonlinear misspecification, and show that it can favor either estimator. However, we demonstrate that in settings typical of industry data---in particular, heavy-tailed and skewed covariates with heteroskedastic deviations from the linear model---interacted regression is actually less precise, and we quantify this gap over a range of data generating processes.
+Regression adjustment is widely used to improve the precision of average treatment effect estimates from randomized controlled trials. In the important case of equally balanced trials, simple regression and interacted regression have the same first-order variance, meaning the optimal estimator is determined by higher-order terms. We derive a closed-form expression for the second order difference in their expansion mean squared error under complete randomization and superpopulation sampling, and show that this difference, when normalized by the shared first-order variance and under additional mean-square remainder conditions, is the asymptotic effective sample size loss from using the less efficient estimator. We decompose the expression into interpretable effects from covariate shape, treatment-effect heterogeneity, heteroskedasticity, and nonlinear misspecification, and show that it can favor either estimator. However, we demonstrate that in settings typical of industry data---in particular, heavy-tailed and skewed covariates with heteroskedastic deviations from the linear model---interacted regression is actually less precise, and we quantify this gap over a range of data generating processes.
 \end{abstract}
 
 \section{Introduction}
@@ -87,11 +87,11 @@ Y_i(0)=0.9\,X_i+\sigma(X_i)u_i,
 \qquad
 Y_i(1)=Y_i(0)+1,
 \]
-with $u_i\overset{\mathrm{iid}}{\sim}N(0,1)$. In simulation, interacted regression's MSE exceeds that of simple regression by $6.7\%$ at $n=500$, and asymptotically, the former estimator requires an additional sample size of 83 to catch up to the latter in precision. The asymptotic figure should be read as a guide to sign and rough magnitude rather than an exact prediction at moderate $n$: here the second-order approximation implies an excess MSE of $\gz{intro:pred:500}\%$ at $n=500$, against the simulated $6.7\%$ (Appendix \ref{sec:validity}).
+with $u_i\overset{\mathrm{iid}}{\sim}N(0,1)$. In simulation, interacted regression's MSE exceeds that of simple regression by $6.7\%$ at $n=500$, and the expansion-MSE deficiency is 83 observations; the corresponding actual-MSE interpretation requires the additional remainder conditions discussed in Section \ref{sec:asymptotics}. 
 
 Motivated by this gap, we here conduct a higher-order asymptotic analysis of both simple and interacted regression adjustments in RCTs to elucidate relative merits of both approaches in the case where $\pi = 0.5$. We frame our findings in terms of asymptotic deficiency \citep{HodgesLehmann1970}. When two estimators have matching first-order behavior but one dominates the other on the second-order scale then, asymptotically, switching to the better one gives an accuracy boost that is equivalent to a fixed boost in sample size, which is referred to as the deficiency. Our main finding is that, while either the simple or interacted regression adjustment may have better second-order performance, this trade-off appears to favor simple regression in realistic settings. 
 
-As a practical extension of this theory, we study feasible inference choices for both estimators with heteroskedasticity-robust standard error estimates. In particular, we consider both interacted and simple regression point estimates in tandem with HC1 and jackknife standard error estimates. For both point estimates, HC1 intervals are miscalibrated under skewed, tail-heteroskedastic covariates: in our low-heterogeneity designs they are close to nominal at the $95\%$ level but undercover at lower levels, down to $\gz{jk:small:IREG_HC1c:0.80:min}\%$ at nominal $80\%$. The jackknife is at or above nominal coverage, up to Monte Carlo error, in all of our low-heterogeneity designs, conservatively so under the heaviest tails, but it still undercovers when large treatment-effect heterogeneity meets skewed covariates. In a typical low-HTE regime, simple regression combined with the jackknife achieves nominal coverage, up to Monte Carlo error, at every level we examine, with intervals at most \gz{jk:small:wRJK_IHC1c:maxpct}\% wider, and up to \gz{jk:small:wRJK_IJK:minpct}\% narrower, than those of interacted regression with either standard error.
+As a practical extension of this theory, we study feasible inference choices for both estimators with heteroskedasticity-robust standard error estimates. In particular, we consider both interacted and simple regression point estimates in tandem with HC1 and Jackknife standard error estimates. For both point estimates, HC1 can undercover substantially under skewed, tail-heteroskedastic covariates; the Jackknife improves coverage substantially in most designs but is still liable to undercover in cases of rare outliers or large HTE. In a typical low-HTE regime, simple regression combined with the Jackknife consistently achieves at least nominal coverage with the smallest interval length.
 
 \subsection{Related Work}
  
@@ -134,7 +134,7 @@ Z_i = \Sigma^{-1/2}X_i, \quad \Sigma = \Var{X_i},
 \gamma = \Sigma^{1/2}\p{\beta^*_{(1)}-\beta^*_{(0)}},
 \end{gathered}
 \end{equation}
-so that $\EEE[Z_i]=0$, $\EEE[Z_iZ_i^\top]=I_p$, $\EEE[Z_i\varepsilon_i(w)]=0$ and $\varepsilon_i = \varepsilon_i(W_i)$. All population quantities below are invariant to the choice of matrix square root: replacing $\Sigma^{1/2}$ by $\Sigma^{1/2}O$ for an orthogonal $O$ maps $Z\mapsto O^\top Z$ and $\gamma\mapsto O^\top\gamma$, which leaves every scalar in Theorem \ref{theo:deficiency} unchanged. The first-order behavior of the three estimators is well known \citep{negi2021revisiting}.
+so that $\EEE[Z_i]=0$, $\EEE[Z_iZ_i^\top]=I_p$, $\EEE[Z_i\varepsilon_i(w)]=0$ and $\varepsilon_i = \varepsilon_i(W_i)$. The first-order behavior of the three estimators is well known \citep{negi2021revisiting}.
 
 \begin{prop}
 \label{prop:first_order}
@@ -168,11 +168,11 @@ Suppose we compare two estimators $\htau_A$ and $\htau_B$ of a shared quantity $
 \Delta = \p{c_B - c_A}/\,V.
 \end{equation}
 
-Our work derives the second order stochastic expansion of the MSE. Importantly, the true MSE may not converge as $n\rightarrow\infty$ if the estimators have divergent higher moments. Under the additional regularity conditions that the estimators are well defined and that the Taylor remainder is negligible in mean square at the $n^{-2}$ scale, the ``expansion MSE'' that we derive agrees with the usual finite-sample MSE up to \(o(n^{-2})\).
+Our work derives the second order stochastic expansion of the MSE. Importantly, the true MSE may not converge as $n\rightarrow\infty$ if the estimators have divergent higher moments. Under the additional regularity conditions that the estimators are well defined with finite second moments and satisfy $\|\htau_j-\tilde\tau_{n,j}\|_{L^2}=o(n^{-3/2})$ for $j\in\{\REG,\IREG\}$, as discussed in Appendix \ref{sec:proofs}, the ``expansion MSE'' that we derive agrees with the usual finite-sample MSE up to \(o(n^{-2})\).
 
 \begin{defi}[Expansion MSE]
 \label{def:msexp}
-Let $\mathcal V_i$ collect the per-unit moment coordinates entering the coefficient function of an estimator, let $\mu = \EEE[\mathcal V_i]$, $\bar{\mathcal V} = n^{-1}\sum_i \mathcal V_i$, and suppose $\htau = g(\bar{\mathcal V})$ for a function $g$ that is three times continuously differentiable in a neighborhood of $\mu$ with $g(\mu) = \tau$. Write $\zeta^{(n)} = \sqrt n(\bar{\mathcal V} - \mu)$ and let
+Let $\mathcal V_i$ be a vector of sample moments, let $\mu = \EEE[\mathcal V_i]$, $\bar{\mathcal V} = n^{-1}\sum_i \mathcal V_i$, and suppose $\htau = g(\bar{\mathcal V})$ for a function $g$ that is three times continuously differentiable in a neighborhood of $\mu$ with $g(\mu) = \tau$. Write $\zeta^{(n)} = \sqrt n(\bar{\mathcal V} - \mu)$ and let
 \begin{equation}
 \label{eq:hall_expansion}
 \tilde\tau_n
@@ -340,7 +340,7 @@ While the above results concern the precision of the point estimates provided by
 \subsection{Implementation and variance estimators}
 \label{sec:standard}
 
-We fit REG and IREG as in the R package \texttt{estimatr} \citep{estimatr}: REG is \texttt{lm\char`\_robust(y \textasciitilde{} w + x)}, and IREG is \texttt{lm\char`\_lin(y \textasciitilde{} w, covariates = \textasciitilde{} x)}, with \texttt{se\char`\_type = "HC1"} requested explicitly (the package default is HC2). For speed, the simulations below use a vectorized NumPy implementation of the same estimators, which reproduces \texttt{estimatr}'s estimates and standard errors; the replication repository documents the cross-check. Because we operate in a superpopulation framework while these implementations are for fixed design sampling, we add a plug-in estimate of the variance of the sample covariate mean used for centering (\citealp[Section~5.3]{imbens2009recent}; \citealp{negi2021revisiting}):
+We fit REG and IREG as in the R package \texttt{estimatr} \citep{estimatr}: REG is \texttt{lm\char`\_robust(y \textasciitilde{} w + x)}, and IREG is \texttt{lm\char`\_lin(y \textasciitilde{} w, covariates = \textasciitilde{} x)}, with \texttt{se\char`\_type = "HC1"} (the package default is HC2). Because we operate in a superpopulation framework while these implementations are for fixed design sampling, we add a plug-in estimate of the variance of the sample covariate mean used for centering (\citealp[Section~5.3]{imbens2009recent}; \citealp{negi2021revisiting}):
 \begin{equation}
 \label{eq:vsp}
 \hat G=\hdelta^\top\hat\Sigma_X\hdelta,
@@ -349,7 +349,7 @@ We fit REG and IREG as in the R package \texttt{estimatr} \citep{estimatr}: REG 
 \end{equation}
 where $\hdelta$ is the vector of interaction coefficients and $\hat\Sigma_X$ the sample covariance of the covariates; $\hat G$ estimates $G=\|\gamma\|^2$. Because $\hdelta$ is itself noisy, $\hat G$ is biased upward, by about $\tr\{\mathrm{Var}(\hdelta)\,\Sigma\}$.
 
-We compare two choices of robust standard error estimates. HC1 is a popular benchmark: it is Stata's default and used in $98.1\%$ of 40,571 robust Stata regressions in reproduction packages of leading economics journals \citep{Kranz2024}. We compare it with a leverage-aware alternative, the delete-one jackknife (JK) applied to the final estimate \citep{MacKinnonWhite1985}. Let $\htau_{(-i)}$ be the estimator recomputed on the sample with unit $i$ removed---both arm-specific fits are refitted and, for IREG, the covariates are recentred at the leave-one-out mean $\bar X_{(-i)}$---the JK variance estimate is then given by
+We choose to investigate HC1 as a popular benchmark: it is Stata's default and used in $98.1\%$ of 40,571 robust Stata regressions in reproduction packages of leading economics journals \citep{Kranz2024}. We compare it with a leverage-aware alternative, the delete-one jackknife (JK) applied to the final estimate \citep{MacKinnonWhite1985}. Let $\htau_{(-i)}$ be the estimator recomputed on the sample with unit $i$ removed---both arm-specific fits are refitted and, for IREG, the covariates are recentred at the leave-one-out mean $\bar X_{(-i)}$---the JK variance estimate is then given by
 \begin{equation}
 \label{eq:jk}
 \hat V_{\mathrm{JK}}
@@ -358,7 +358,7 @@ We compare two choices of robust standard error estimates. HC1 is a popular benc
 \qquad
 \bar\htau = \frac1n\sum_{i=1}^n \htau_{(-i)} .
 \end{equation}
-Because JK operates on the final treatment effect estimate, including the recentring at $\bar X$, it accounts for the sampling variation of the covariate mean and thus requires no superpopulation correction. Thus for IREG we report HC1 with the plug-in correction \eqref{eq:vsp} alongside the jackknife; for REG, we directly report HC1 and JK. For least squares, JK is closely approximated by HC3 \citep{MacKinnonWhite1985}. We compute $\htau_{(-i)}$ with the exact deletion formula for least squares, which agrees with refitting to machine precision. When removing unit $i$ leaves a rank-deficient design (unit $i$ has leverage one in its fit), $\htau_{(-i)}$ is undefined; we then omit it and apply \eqref{eq:jk} to the remaining $n'$ leave-one-out estimates, with $n'$ in place of $n$. All intervals use $t$ critical values with $n-k$ degrees of freedom, where $k$ is the number of regression coefficients, and a replication without a finite interval counts as a non-cover.
+Because JK operates on the final treatment effect estimate, it accounts for the sampling variation of the covariate mean and thus requires no superpopulation correction. Thus for IREG we report HC1 with the plug-in correction \eqref{eq:vsp} alongside the jackknife; for REG, we directly report HC1 and JK. When removing unit $i$ leaves a rank-deficient design (unit $i$ has leverage one in its fit), $\htau_{(-i)}$ is undefined; we then omit it and apply \eqref{eq:jk} to the remaining $n'$ leave-one-out estimates, with $n'$ in place of $n$. All intervals use $t$ critical values with $n-k$ degrees of freedom, where $k$ is the number of regression coefficients.
 
 \subsection{Numerical evidence}
 \label{sec:combined}
@@ -367,7 +367,7 @@ Table \ref{tab:battery} compares all four joint procedure possibilities across \
 
 \begin{table}[htbp]
 \centering
-\caption{Root-mean-squared error of the point estimators, and median width and coverage (\%) of nominal $95\%$ intervals for the population ATE: IREG with HC1 plus the plug-in correction and with the direct jackknife \eqref{eq:jk}, and REG with HC1 and with the direct jackknife ($n=500$, \gz{hte:reps} replications; ``het.''\ denotes heteroskedastic noise). Designs are defined in Appendix \ref{sec:designs}; $g$ is the treatment-effect slope of the scalar lognormal designs. In the rare-value design, \gz{jk:rare:IREG:degfrac}\% of replications have a leverage-one unit in an IREG arm, whose leave-one-out estimate is omitted from the jackknife (Section \ref{sec:standard}).}
+\caption{Root-mean-squared error of the point estimators, and median width and coverage (\%) of nominal $95\%$ intervals for the population ATE: IREG with HC1 plus the plug-in correction and with the direct jackknife \eqref{eq:jk}, and REG with HC1 and with the direct jackknife ($n=500$, \gz{hte:reps} replications; ``het.''\ denotes heteroskedastic noise). Designs are defined in Appendix \ref{sec:designs}; $g$ is the treatment-effect slope of the scalar lognormal designs. RMSE is computed over replications where both point estimators exist; coverage counts unavailable intervals as failures, and median width is computed over available intervals. In the rare-value design, \gz{jk:rare:IREG:degfrac}\% of replications have a leverage-one unit in an IREG arm, whose leave-one-out estimate is omitted from the jackknife (Section \ref{sec:standard}).}
 \label{tab:battery}
 \footnotesize
 \setlength{\tabcolsep}{2.5pt}
@@ -383,9 +383,9 @@ Design & $R^2_\tau$ & RMSE & width & cov. & width & cov. & RMSE & width & cov. &
 \end{tabular}}
 \end{table}
 
-When $R^2_\tau$ is small ($<0.05$), the combination of REG and JK is the most attractive. Its $95\%$ coverage ranges from \gz{jk:small:REG_JK:min}\% to \gz{jk:small:REG_JK:max}\%, its median interval width is between $\gz{jk:small:wRJK_IJK:min}$ and $\gz{jk:small:wRJK_IJK:max}$ times that of IREG with the jackknife and between $\gz{jk:small:wRJK_IHC1c:min}$ and $\gz{jk:small:wRJK_IHC1c:max}$ times that of IREG with HC1 plus the plug-in, which covers \gz{jk:small:IREG_HC1c:min}--\gz{jk:small:IREG_HC1c:max}\%. REG is also at least as precise a point estimator in these designs, with MSE ratios IREG/REG between \gz{jk:small:mseratio:min} and \gz{jk:small:mseratio:max}. At the $95\%$ level both estimators are close to nominal when paired with HC1 (REG+HC1 covers \gz{jk:small:REG_HC1:min}--\gz{jk:small:REG_HC1:max}\%); for IREG this partly reflects the plug-in, whose upward bias offsets the understatement of HC1 at high-leverage points, and the agreement does not extend to other nominal levels (Table \ref{tab:plugin-cal}). The price of the jackknife is width: under the heaviest tails it is conservative, and REG+JK intervals are up to $\gz{jk:small:wRJK_RHC1:max}$ times as wide as REG+HC1's.
+When $R^2_\tau$ is small ($<0.05$), the combination of REG and JK is a clear winner across our selected designs. Its $95\%$ coverage ranges from \gz{jk:small:REG_JK:min}\% to \gz{jk:small:REG_JK:max}\%, its median interval width is between $\gz{jk:small:wRJK_IJK:min}$ and $\gz{jk:small:wRJK_IJK:max}$ times that of IREG with the jackknife and between $\gz{jk:small:wRJK_IHC1c:min}$ and $\gz{jk:small:wRJK_IHC1c:max}$ times that of IREG with HC1 plus the plug-in, which covers \gz{jk:small:IREG_HC1c:min}--\gz{jk:small:IREG_HC1c:max}\%. REG is also at least as precise a point estimator in these designs, with MSE ratios IREG/REG between \gz{jk:small:mseratio:min} and \gz{jk:small:mseratio:max}. At the $95\%$ level both estimators achieve only slightly anticonservative coverage with HC1; for IREG the upward bias of the plug-in partly offsets HC1's understatement of variance, and the undercoverage shows up more at other nominal levels (Table \ref{tab:plugin-cal}). The price of JK is width: under the heaviest tails it is conservative, and REG+JK intervals are up to $\gz{jk:small:wRJK_RHC1:max}$ times as wide as REG+HC1's.
 
-This pattern does not hold across all DGPs. As $R^2_\tau$ grows with skewed covariates, REG undercovers with either variance estimator, down to \gz{jk:ln15_large:REG_JK:cov}\% with JK at $R^2_\tau=\gz{jk:ln15_large:R2}$, while IREG with JK is the most reliable procedure, although it too reaches only \gz{jk:ln15_large:IREG_JK:cov}\% there. In the rare-value design an IREG arm contains a single rare unit in \gz{jk:rare:IREG:degfrac}\% of replications; removing that unit leaves a rank-deficient fit, so its leave-one-out estimate is omitted, and IREG+JK covers \gz{jk:rare:IREG:degcov}\% of those replications against \gz{jk:rare:IREG:othercov}\% of the others. Counting those replications as failures instead would lower IREG+JK coverage to \gz{jk:rare:IREG:strict}\%. REG is essentially unaffected: removing a unit leaves its pooled fit rank deficient in only \gz{jk:rare:REG:degfrac}\% of replications.
+This pattern does not hold across all DGPs. As $R^2_\tau$ grows with skewed covariates, REG undercovers with either variance estimator, down to \gz{jk:ln15_large:REG_JK:cov}\% with JK at $R^2_\tau=\gz{jk:ln15_large:R2}$, while IREG with JK is the most reliable procedure, although it also reaches only \gz{jk:ln15_large:IREG_JK:cov}\% there. In the rare-value design an IREG arm contains a single rare unit in \gz{jk:rare:IREG:degfrac}\% of replications; removing that unit leaves a rank-deficient fit, so its LOO estimate is omitted, and IREG+JK covers \gz{jk:rare:IREG:degcov}\% of those refits against \gz{jk:rare:IREG:othercov}\% of the others. Treating any undefined leave-one-out estimate as making the entire interval unavailable would instead give IREG+JK coverage of \gz{jk:rare:IREG:strict}\%. REG is essentially unaffected: removing a unit leaves its pooled fit rank deficient in only \gz{jk:rare:REG:degfrac}\% of replications.
 
 \begin{table}[htbp]
 \centering
@@ -411,14 +411,14 @@ Table \ref{tab:plugin-cal} tests this pattern in the low-$R^2_\tau$ DGPs across 
 Altogether, our results tackle the comparison of REG and IREG in finite samples through the two most important features one would want from a treatment effect estimator in practice: accuracy of the point estimate, and validity of feasible inference.
 
 \emph{Point estimation.}
-We have used second-order expansions to settle the natural question left open by the first-order equivalence of IREG and REG's MSE in a balanced CRT: which estimator is the optimal choice in finite-sample settings, and how significant is the higher-order effect? Theorem \ref{theo:deficiency} responds: there is no universal answer, and the optimality depends on a mix of treatment-effect heterogeneity, covariate shape, residual heteroskedasticity, and nonlinear misspecification. There are important cases where either estimator prevails. In the well-specified Gaussian case, the advantage of IREG grows linearly in $p$. More generally, however, skewness and heavy tails easily reverse this ordering, particularly when interacted with heteroskedasticity or misspecification. In our scalar lognormal designs, this produces deficiencies of \gz{def:s0.8}, \gz{def:s1.0}, and \gz{def:s1.2} observations at $s=0.8,1,1.2$, respectively, and at $n=500$ the simulated MSE of IREG exceeds that of REG by \gz{defsim:s1.0:n500}\% and \gz{defsim:s1.2:n500}\% in the latter two designs. 
+We have used second-order expansions to address the natural question left open by the first-order equivalence of IREG and REG's MSE in a balanced CRT: which estimator is favored at second order in expansion MSE, and how significant is the higher-order effect? Theorem \ref{theo:deficiency} responds: there is no universal answer, and the optimality depends on a mix of treatment-effect heterogeneity, covariate shape, residual heteroskedasticity, and nonlinear misspecification. There are important cases where either estimator prevails. In the well-specified Gaussian case, the advantage of IREG grows linearly in $p$. More generally, however, skewness and heavy tails easily reverse this ordering, particularly when interacted with heteroskedasticity or misspecification. In our scalar lognormal designs, this produces deficiencies of \gz{def:s0.8}, \gz{def:s1.0}, and \gz{def:s1.2} observations at $s=0.8,1,1.2$, respectively, and at $n=500$ the simulated MSE of IREG exceeds that of REG by \gz{defsim:s1.0:n500}\% and \gz{defsim:s1.2:n500}\% in the latter two designs. 
 
-These numbers demonstrate that higher-order terms can yield a meaningful difference in practice, particularly with either smaller $n$ or large $n$ and a severely skewed, heavy-tailed, or misspecified DGP. Furthermore, the connection of our work to asymptotic deficiency could be useful for practitioners in quantifying the significance of this effect. For instance, if you estimate $\Delta$ for your dataset via prior knowledge or plug-in moments, then the asymptotic cost of using the inferior estimator is approximately $\Delta\cdot c$, where $c$ is the cost per unit, subject to the caveat that follows.
+These numbers demonstrate that higher-order terms can yield a meaningful difference in practice, particularly with either smaller $n$ or large $n$ and a severely skewed, heavy-tailed, or misspecified DGP. Furthermore, the connection of our work to asymptotic deficiency could be useful for practitioners in quantifying the significance of this effect. For instance, if you estimate $\Delta$ for your dataset via prior knowledge or plug-in moments, then, under the additional remainder conditions, the asymptotic cost of using the inferior estimator is approximately $\Delta\cdot c$, where $c$ is the cost per unit.
 
-An important caveat here is that, paradoxically, it is the settings where this difference would matter most---heavily skewed or misspecified DGPs, with a large $D_p$---where the third-order and higher terms can still contribute meaningfully at moderate $n$ (Appendix \ref{sec:validity}). The same higher moments make a plug-in estimate of $\Delta$ noisy, and with very heavy tails the moments required by Assumption \ref{assu:moments} may not exist. Thus, in those cases our expression is more useful in determining the binary question of optimal estimator and approximate magnitude of difference, rather than as an exact pointer of the difference in MSE that will be observed. Furthermore, while we have quantified this difference in a range of DGPs, and given it the practical interpretation of asymptotic deficiency, our analysis is limited in that we only use synthetic processes. A natural next step is to apply these formulas to real-life datasets using plug-in moments.
+An important caveat here is that, paradoxically, it is the settings where this difference would matter most---heavily skewed or misspecified DGPs, with a large $D_p$---where the third-order and higher terms can still contribute meaningfully at moderate $n$ (Appendix \ref{sec:validity}). The same higher moments make a plug-in estimate of $\Delta$ noisy. Thus, in those cases our expression is more useful in assessing the second-order ordering in expansion MSE and approximate magnitude of difference, rather than as an exact pointer of the difference in MSE that will be observed. Furthermore, while we have quantified this difference in a range of DGPs, and given it the practical interpretation of asymptotic deficiency, our analysis is limited in that we only use synthetic processes. A natural next step is to apply these formulas to real-life datasets using plug-in moments, which must carefully address plug-in noise.
 
 \emph{Feasible inference.}
-We have examined numerical evidence of feasible inference behavior of both estimators when paired with popular robust standard error estimates HC1 and JK. Importantly, even though IREG is largely the recommended estimator in the statistics literature and HC1 prevails in applied research, this combination is not the most attractive in many practical settings. With low $R_\tau^2$---which we expect to be common in practice---IREG with HC1 and the plug-in correction matches REG+HC1 at the $95\%$ level but is miscalibrated across nominal levels, while REG with JK reaches nominal coverage, up to Monte Carlo error, at every level we examine, with intervals at most \gz{jk:small:wRJK_IHC1c:maxpct}\% wider, and up to \gz{jk:small:wRJK_IJK:minpct}\% narrower, than those of IREG with either variance estimator. However, this trend does not hold with large $R^2_\tau$ and skewed covariates, in which case REG undercovers with either variance estimator and IREG with JK becomes the most reliable combination, although no procedure reaches nominal coverage in the most extreme of our designs. Our practical recommendation is thus to prefer JK to HC1, and to exercise judgement on the realistic order of $R^2_\tau$ when choosing between REG and IREG.
+We have examined numerical evidence of feasible inference behavior of both estimators when paired with popular robust standard error estimates HC1 and JK. Importantly, even though IREG is largely the recommended estimator in the statistics literature and HC1 prevails in applied research, this combination is quite unattractive in many practical settings. With low $R_\tau^2$---which we expect to be common in practice---IREG with HC1 and the plug-in correction matches REG+HC1 at the $95\%$ level (with larger intervals) but is miscalibrated across nominal levels. REG with JK reaches nominal coverage, up to Monte Carlo error, at every level we examine, with intervals at most \gz{jk:small:wRJK_IHC1c:maxpct}\% wider, and up to \gz{jk:small:wRJK_IJK:minpct}\% narrower, than those of IREG with either variance estimator. However, this trend does not hold with large $R^2_\tau$ and skewed covariates, in which case REG undercovers with either variance estimator and IREG with JK becomes the most reliable combination, although no procedure reaches nominal coverage in the most extreme designs. Our practical recommendation thus confirms conventional wisdom in the statistics literature to use JK instead of HC1, and to exercise judgement on the realistic order of $R^2_\tau$ when choosing between REG and IREG.
 
 This finding is intuitive; when the linear HTE is only a small portion of the leftover variance from simple regression, interacted regression misattributes and thus miscalibrates it. However, if the linear HTE explains a lot of variance, then adding this term can be genuinely useful. This general idea holds true for both point estimates and feasible inference, although we do not claim a one-to-one relationship between $\Delta$ and coverage.
 
@@ -432,29 +432,91 @@ We also acknowledge that this part of our work is based on numerical evidence an
 \section{Proofs}
 \label{sec:proofs}
 
-Throughout this appendix, indices $i,j,k,l,a,b,c,d$ for $Z$, $T_3$,
-$T_4$, $\mathcal E$ and $P$ refer to coordinates of the whitened
-covariate vector. We write $G = \|\gamma\|^2$.
+The goal of this section is to derive the constant $D_p$ in Theorem
+\ref{theo:deficiency}. The argument has three parts. First, we express a
+completely randomized trial as two independent samples and obtain an
+MSE expansion for a fixed treatment fraction. Second, we calculate the
+second-order constant under Bernoulli assignment. Third, we remove the
+effect of random treatment imbalance to recover the constant for a
+balanced trial. The remaining lemmas translate the answer into matrix
+notation and establish the identities used in the numerical checks.
+
+All MSE expansions in the proofs refer to the Taylor-polynomial MSE
+$\MSEexp$ of Definition \ref{def:msexp}. Relating this quantity to the
+finite-sample MSE of the fitted estimator requires additional control
+of the Taylor remainder and of nearly singular sample Gram matrices;
+finite population moments alone do not supply that control. The
+identities for $D_p$ below concern $\MSEexp$ under Assumption
+\ref{assu:moments}. For example, a sufficient condition for transferring the expansion to
+the fitted estimator is that it be defined with finite second moment
+and satisfy
+\[
+\|\htau_j-\tilde\tau_{n,j}\|_{L^2}=o(n^{-3/2}).
+\]
+Since $\|\tilde\tau_{n,j}-\tau\|_{L^2}=O(n^{-1/2})$, the
+difference of the two MSEs is then $o(n^{-2})$ by Cauchy--Schwarz.
+This is a sufficient remainder condition, not a consequence of the
+sampling-and-moment assumption. Statements about deficiency
+additionally require $V^*>0$. If $V^*=0$, the expansion-MSE identity remains meaningful,
+but division by $V^*$ does not define a deficiency.
+
+Population expectations involving $W$ in the second-order constants
+are evaluated at the nominal allocation: an auxiliary
+Bernoulli$(1/2)$ variable independent of the potential outcomes and
+covariates. This convention also applies when the realized CRT has
+odd $n$, with treatment fraction $\lfloor n/2\rfloor/n$. The effect of
+that $O(n^{-1})$ imbalance is included in the remainder.
+
+We use $G=\|\gamma\|^2$. In tensor formulas, indices such as
+$i,j,k,l,a,b,c,d$ range from $1$ to $p$ and refer to covariate
+coordinates, rather than experimental units. Repeated indices are
+summed over unless stated otherwise. In particular, $\delta_{jk}$ is
+the Kronecker delta. Indices of the raw-moment vector $\mathcal V$
+instead range over the coordinates of that vector.
+
+\subsection{Two independent samples and a fixed-fraction expansion}
+
+The first lemma explains why superpopulation sampling simplifies the
+complete-randomization calculation. Once the treatment assignment is
+fixed, the two arms consist of disjoint sets of independent units.
 
 Under complete randomization with $n_1=m$ treated units, write
-$U_i^{(w)}$ for the vector containing $X_i$, $Y_i(w)$ and the distinct
-entries of $X_iX_i^\top$ and $X_iY_i(w)$, and let $\bar U_1$ and $\bar U_0$ be the averages of $U_i^{(1)}$ over treated units and of $U_i^{(0)}$ over control units, with population means $\mu_1$ and $\mu_0$.
+$U_i^{(w)}$ for the vector containing $X_i$, $Y_i(w)$ and the distinct entries of $X_iX_i^\top$ and $X_iY_i(w)$, and let $\bar U_1$ and $\bar U_0$ be the averages of $U_i^{(1)}$ over treated units and of $U_i^{(0)}$ over control units, with population means $\mu_1$ and $\mu_0$.
 
 \begin{lemm}[Two-sample representation]
 \label{lemm:two_sample}
-Let $(X_i,Y_i(0),Y_i(1))$ be IID and let the assignment vector $W$ be
-independent of them, with $\sum_iW_i=m$. Conditionally on $W$, the treated observations $\{(X_i,Y_i(1)):W_i=1\}$ and the control observations $\{(X_i,Y_i(0)):W_i=0\}$ are independent IID samples of sizes $m$ and $n-m$ from the laws of $(X,Y(1))$ and $(X,Y(0))$ respectively. Both $\htau_\REG$ and $\htau_\IREG$ are of the form $h_{j,r}(\bar U_1,\bar U_0)$ with $r=m/n$, where $h_{j,r}$ is infinitely differentiable in a neighborhood of $(\mu_1,\mu_0)$ and its derivatives at $(\mu_1,\mu_0)$ are rational functions of $r$ without poles in $(0,1)$.
+Let $(X_i,Y_i(0),Y_i(1))$ be IID and the assignment vector $W$ be
+independent of them, with $\sum_iW_i=m$. Conditionally on $W$, the treated observations $\{(X_i,Y_i(1)):W_i=1\}$ and the control observations $\{(X_i,Y_i(0)):W_i=0\}$ are independent IID samples of sizes $m$ and $n-m$ from the laws of $(X,Y(1))$ and $(X,Y(0))$ respectively. 
+
+Furthermore, both $\htau_\REG$ and $\htau_\IREG$ are of the form $h_{j,r}(\bar U_1,\bar U_0)$ with $r=m/n$, where $h_{j,r}$ is infinitely differentiable in a neighborhood of $(\mu_1,\mu_0)$ and its derivatives at $(\mu_1,\mu_0)$ are rational functions of $r$ without poles in $(0,1)$.
 \end{lemm}
 
 \begin{proof}
-Given $W$, the units remain IID because $W$ is independent of them; the treated and control index sets are fixed and disjoint, so the two blocks are independent IID samples, observed through $Y_i(1)$ and $Y_i(0)$ respectively. Both estimators are rational functions of per-arm means, second moments and cross-moments: $\htau_\IREG$ is the difference of the arm-wise intercepts after centering at
-$\bar X=r\bar X_1+(1-r)\bar X_0$, with arm-wise least-squares slopes
-$\mathcal S_w^{-1}s_w$ built from $\bar U_w$; $\htau_\REG$ uses the pooled within-arm slope, whose Gram matrix is $r\mathcal S_1+(1-r)\mathcal S_0$. The Gram matrices are invertible at $(\mu_1,\mu_0)$ because $\Sigma\succ0$, which gives the smoothness and the dependence on $r$.
+Conditioning on $W$ fixes two disjoint index sets. Independence of
+$W$ and the sampled units leaves the unit distributions unchanged;
+independence across units then gives independence both within and
+between the arms.
+
+To establish the second claim, note that the coordinates of $\bar U_w$
+determine all per-arm means, second moments, and cross-moments needed
+for least squares. Both estimators are rational functions of these
+coordinates. To see this explicitly, let
+$C_w=\overline{XX^\top}_w-\bar X_w\bar X_w^\top$ and
+$s_w=\overline{XY}_w-\bar X_w\bar Y_w$. The arm-specific slope is
+$C_w^{-1}s_w$, and the pooled within-arm slope is
+\[
+\{rC_1+(1-r)C_0\}^{-1}\{rs_1+(1-r)s_0\}.
+\]
+IREG evaluates the arm-specific fitted regressions at
+$\bar X=r\bar X_1+(1-r)\bar X_0$ and takes their difference; REG
+uses the pooled slope to adjust $\bar Y_1-\bar Y_0$. The Gram matrices are invertible at $(\mu_1,\mu_0)$ because $\Sigma\succ0$, which gives the smoothness and the dependence on $r$.
 \end{proof}
 
 \begin{lemm}[Conditional expansion]
 \label{lemm:conditional}
-Under Assumption \ref{assu:moments}, let $\MSEexp_{\CRT,r}(\htau_j)$ be the second moment of the third-order Taylor polynomial of $h_{j,r}$ at $(\mu_1,\mu_0)$. For every
+Under Assumption \ref{assu:moments}, let $\mathcal P_r$ be the third-order Taylor polynomial of $h_{j,r}$
+at $(\mu_1,\mu_0)$ and define
+$\MSEexp_{\CRT,r}(\htau_j)=\EEE[(\mathcal P_r-\tau)^2]$. For every
 $\eta\in(0,\frac12)$,
 \begin{equation}
 \label{eq:conditional_expansion}
@@ -468,12 +530,106 @@ uniformly in $r=m/n\in[\frac12-\eta,\frac12+\eta]$, with $V_j$ and $c_j$ infinit
 \end{lemm}
 
 \begin{proof}
-The Taylor polynomial is a polynomial of degree three in
-$(\bar U_1-\mu_1,\bar U_0-\mu_0)$ whose coefficients are smooth in $r$
-(Lemma \ref{lemm:two_sample}); its square has degree six. By Lemma \ref{lemm:two_sample} the two blocks are independent IID samples,
-so each mixed moment of the centered per-arm means is a finite sum of
-products of joint cumulants of $U^{(1)}$ and $U^{(0)}$ divided by powers of $m=rn$ and $(n-m)=(1-r)n$. Moments up to order six are finite because the entries of $U^{(w)}$ are products of at most two coordinates of $(X_i,Y_i(w))$ and Assumption \ref{assu:moments} bounds their twelfth moments. Collecting terms gives a finite expansion in integer powers of $1/n$ whose coefficients are rational in $r$ without poles on $[\frac12-\eta,\frac12+\eta]$; the terms beyond $n^{-2}$ are $O(n^{-3})$ uniformly on that interval.
+Fix an estimator $j\in\{\REG,\IREG\}$ and an interval
+$I_\eta=[\frac12-\eta,\frac12+\eta]$ with $0<\eta<1/2$.
+The arm sizes are $m=rn$ and $n-m=(1-r)n$. We first expand the
+squared Taylor polynomial, then determine which sample-mean moments
+can contribute at orders $n^{-1}$ and $n^{-2}$.
+
+\emph{Step 1: expand the squared estimation error.}
+Write $d_1=\bar U_1-\mu_1$ and $d_0=\bar U_0-\mu_0$. Then $h_{j,r}(\mu_1,\mu_0)=\tau$, and the third-order Taylor polynomial of $h_{j,r}$ at $(\mu_1,\mu_0)$ can be written
+\[
+\mathcal P_r-\tau=q_1+q_2+q_3,
+\]
+where $q_k$ is a polynomial of degree $k$ in the coordinates of $(d_1,d_0)$ whose coefficients are the $k$th derivatives of $h_{j,r}$ at $(\mu_1,\mu_0)$ divided by $k!$. By Lemma \ref{lemm:two_sample}, each of these coefficients is a rational function of $r$ without poles in $(0,1)$. Expanding the square,
+\[
+\MSEexp_{\CRT,r}(\htau_j)
+=\EEE[q_1^2]+2\EEE[q_1q_2]+\big(\EEE[q_2^2]+2\EEE[q_1q_3]\big)+2\EEE[q_2q_3]+\EEE[q_3^2].
+\]
+\emph{Step 2: justify the required moments and separate the arms.}
+After expanding the polynomials, each expectation is a linear
+combination of mixed moments of the form
+\begin{equation}
+\label{eq:mixed_moment}
+\EEE\Big[\prod_{u=1}^{a}d_{1,k_u}\prod_{u=1}^{b}d_{0,l_u}\Big],\qquad 2\le a+b\le 6,
+\end{equation}
+with coefficients that are products of two Taylor coefficients, and hence rational in $r$ without poles in $(0,1)$. Each coordinate of $U^{(w)}$ is one of $X_k$, $Y(w)$, $X_kX_l$ or $X_kY(w)$. By the Cauchy--Schwarz inequality, $\EEE|X_kX_l|^6\le(\EEE|X_k|^{12}\,\EEE|X_l|^{12})^{1/2}$, and similarly for $X_kY(w)$, so Assumption \ref{assu:moments} gives $\EEE\|U^{(w)}\|^6<\infty$. By H\"older's inequality, every mixed moment of order at most six of the coordinates of $U^{(w)}$ is then finite.
+
+By Lemma \ref{lemm:two_sample}, conditionally on $W$ the treated and control observations are independent IID samples of sizes $m$ and $n-m$. In particular $d_1$ and $d_0$ are independent, and \eqref{eq:mixed_moment} factors as
+\[
+\EEE\Big[\prod_{u=1}^{a}d_{1,k_u}\Big]\;\EEE\Big[\prod_{u=1}^{b}d_{0,l_u}\Big].
+\]
+\emph{Step 3: count powers of the arm size.}
+Consider the treated-arm factor. The control-arm calculation is the
+same, with $U^{(0)}$ and $n-m$ in place of $U^{(1)}$ and $m$.
+Write $\kappa_{k_1\cdots k_s}$ for the joint cumulant of $(U^{(1)}_{k_1},\ldots,U^{(1)}_{k_s})$. By the IID property,
+\[
+\operatorname{cum}(d_{1,k_1},\ldots,d_{1,k_s})
+=m^{-s}\sum_{i:W_i=1}\operatorname{cum}\big(U^{(1)}_{i,k_1},\ldots,U^{(1)}_{i,k_s}\big)
+=m^{1-s}\,\kappa_{k_1\cdots k_s}\qquad(s\ge2),
+\]
+while the first-order cumulants of $d_1$ are zero. The moment--cumulant formula writes $\EEE[\prod_{u=1}^a d_{1,k_u}]$ as a sum over set partitions $\pi$ of $\{1,\ldots,a\}$ of $\prod_{B\in\pi}\operatorname{cum}(d_{1,k_u}:u\in B)$. A partition with a singleton block contributes zero. A partition into blocks of size at least two contributes a product of cumulants of $U^{(1)}$ times $m^{\sum_{B\in\pi}(1-|B|)}=m^{-(a-|\pi|)}$, and such a partition has $1\le|\pi|\le\lfloor a/2\rfloor$. Hence, for $a\ge2$,
+\begin{equation}
+\label{eq:mean_moment}
+\EEE\Big[\prod_{u=1}^{a}d_{1,k_u}\Big]=\sum_{s=\lceil a/2\rceil}^{a-1}\frac{M^{(1)}_s}{m^{s}},
+\end{equation}
+where each $M^{(1)}_s$ is a finite sum of products of cumulants of $U^{(1)}$ and does not depend on $m$; the moment equals $0$ for $a=1$ and $1$ for $a=0$. For example,
+\[
+\begin{gathered}
+\EEE[d_{1,k}d_{1,l}]=\frac{\kappa_{kl}}{m},
+\qquad
+\EEE[d_{1,k}d_{1,l}d_{1,q}]=\frac{\kappa_{klq}}{m^2},
+\\
+\EEE[d_{1,k}d_{1,l}d_{1,q}d_{1,v}]=\frac{\kappa_{kl}\kappa_{qv}+\kappa_{kq}\kappa_{lv}+\kappa_{kv}\kappa_{lq}}{m^2}+\frac{\kappa_{klqv}}{m^3}.
+\end{gathered}
+\]
+These identities hold exactly for every $m$; no approximation is involved.
+
+\emph{Step 4: collecting powers of $n$.}
+Substitute $m=rn$ and $n-m=(1-r)n$. By \eqref{eq:mean_moment}, a mixed moment \eqref{eq:mixed_moment} with $a$ treated and $b$ control coordinates vanishes if $a=1$ or $b=1$, and otherwise is a finite sum of terms
+\[
+\frac{M^{(1)}_sM^{(0)}_t}{r^{s}(1-r)^{t}}\;n^{-(s+t)},
+\qquad
+\lceil a/2\rceil\le s,\quad \lceil b/2\rceil\le t,
+\]
+with $s=0$ and $M^{(1)}_0=1$ when $a=0$, and $t=0$ and $M^{(0)}_0=1$ when $b=0$. Its power of $1/n$ is therefore at least $\lceil a/2\rceil+\lceil b/2\rceil\ge\lceil (a+b)/2\rceil$, and at most $5$. Combining these moment identities with the squared expansion in Step 1,
+\[
+\MSEexp_{\CRT,r}(\htau_j)=\sum_{\ell=1}^{5}\frac{e_\ell(r)}{n^{\ell}},
+\]
+where each $e_\ell$ is a finite sum of products of Taylor coefficients, cumulants of $U^{(1)}$ and $U^{(0)}$, and powers of $r^{-1}$ and $(1-r)^{-1}$. Each $e_\ell$ is thus rational in $r$ without poles in $(0,1)$, and in particular infinitely differentiable and bounded on $I_\eta$. The expansion is exact: a polynomial in $1/n$, not an asymptotic series.
+
+The coefficient of $n^{-2}$ does not require every term in the square.
+The following degree count identifies the terms that matter. The degree-two term $\EEE[q_1^2]$ contributes to $\ell=1$ only:
+\[
+\EEE[q_1^2]
+=\frac{g_1^\top\Var{U^{(1)}}g_1}{m}+\frac{g_0^\top\Var{U^{(0)}}g_0}{n-m}
+=\frac1n\left\{\frac{g_1^\top\Var{U^{(1)}}g_1}{r}+\frac{g_0^\top\Var{U^{(0)}}g_0}{1-r}\right\},
+\]
+where $g_w$ is the gradient of $h_{j,r}$ with respect to $\bar U_w$ at $(\mu_1,\mu_0)$. The degree-three term $2\EEE[q_1q_2]$ contributes to $\ell=2$ only, through third cumulants. The degree-four terms $\EEE[q_2^2]+2\EEE[q_1q_3]$ contribute to $\ell=2$ and $\ell=3$. The degree-five and degree-six terms contribute only to $\ell\ge3$. Hence
+\[
+V_j(r)=e_1(r),\qquad c_j(r)=e_2(r),
+\]
+where $c_j(r)$ collects the $n^{-2}$ parts of $2\EEE[q_1q_2]$, $\EEE[q_2^2]$ and $2\EEE[q_1q_3]$.
+
+\emph{Step 5: make the remainder bound uniform.}
+Because $r$ stays away from $0$ and $1$, the remaining coefficients
+are bounded independently of the treatment fraction. Specifically,
+for every $n\ge1$ and admissible $r\in I_\eta$,
+\[
+\left|\MSEexp_{\CRT,r}(\htau_j)-\frac{V_j(r)}{n}-\frac{c_j(r)}{n^2}\right|
+=\left|\sum_{\ell=3}^{5}\frac{e_\ell(r)}{n^{\ell}}\right|
+\le\frac{1}{n^{3}}\sum_{\ell=3}^{5}\sup_{r'\in I_\eta}|e_\ell(r')|.
+\]
+The right-hand side is finite because each $e_\ell$ is continuous on the compact interval $I_\eta$. This is the claimed $O(n^{-3})$ bound, uniformly in $r\in I_\eta$.
 \end{proof}
+
+\subsection{From Bernoulli assignment to balanced complete randomization}
+
+Bernoulli assignment makes the unit-level moment calculation convenient,
+but it also makes the treatment fraction random. The next lemma permits
+us to average the fixed-fraction expansion over that random fraction.
+The theorem that follows identifies the correction for fixing the arm
+sizes instead.
 
 \begin{lemm}[Bernoulli and conditional expansions]
 \label{lemm:bern_conditional}
@@ -492,61 +648,113 @@ $\eta\in(0,\frac12)$,
 \end{lemm}
 
 \begin{proof}
-Let $\mathcal P_\Bern$ be the Taylor polynomial of Definition
-\ref{def:msexp} under Bernoulli assignment and $\mathcal P_{\bar W}$ the conditional polynomial of Lemma \ref{lemm:conditional} evaluated at $r=\bar W$. Every coordinate of $\bar{\mathcal V}-\mu$ is a polynomial of degree at most two in $(\bar W-\frac12,\bar U_1-\mu_1,\bar U_0-\mu_0)$ and is linear in the per-arm means; for instance,
+Write $u=\bar W-1/2$, $d_w=\bar U_w-\mu_w$, and
+$\mathcal A_\eta=\{|u|\le\eta\}$. We only define the per-arm
+means and the conditional polynomial on $\mathcal A_\eta$; for all
+sufficiently large $n$, both arms are then nonempty.
+
+\emph{Step 1: compare the two expansions in common coordinates.}
+The unit-level raw-moment coordinates can be chosen to consist of
+$W$, $U^{(W)}$, and their treatment-weighted versions. The map from
+$(u,d_1,d_0)$ to their empirical averages is affine in $(d_1,d_0)$,
+with coefficients affine in $u$. For example,
 \[
-n^{-1}\sum_iW_iU_i^{(1)}-\frac12\mu_1
-=
-(\bar W-\tfrac12)\mu_1
-+\frac12(\bar U_1-\mu_1)
-+(\bar W-\tfrac12)(\bar U_1-\mu_1).
+n^{-1}\sum_iW_iU_i^{(1)}-\tfrac12\mu_1
+=u\mu_1+\tfrac12d_1+ud_1.
 \]
-Fix $\eta\in(0,\frac12)$ and consider the event $|\bar W- \frac12|\le\eta$. On this event, write
+Let $F_j(u,d_1,d_0)$ be the resulting coefficient functional. At
+population arm moments, $F_j(u,0,0)=\tau$ for every allocation
+fraction in $(0,1)$. Let $\mathcal P_\Bern$ be its Bernoulli
+Taylor polynomial expressed in these common coordinates, and let
+$\mathcal P_{\bar W}$ be the polynomial obtained by expanding only
+in $(d_1,d_0)$ to degree three at the realized allocation.
+
+Both agree with the joint Taylor expansion of $F_j$ through total
+degree three. Moreover, each is of degree at most three in
+$(d_1,d_0)$. Their difference therefore has the finite representation
 \[
-\htau_j
-=
-F_j\!\left(
-\bar W-\tfrac12,\,
-\bar U_1-\mu_1,\,
-\bar U_0-\mu_0
-\right),
+\mathcal P_\Bern-\mathcal P_{\bar W}
+=\sum_{k=0}^3\ \sum_{|\alpha|=k}\rho_\alpha(u)d^\alpha,
+\qquad d=(d_1,d_0),
 \]
-where $F_j$ is smooth. Both $\mathcal P_\Bern$ and $\mathcal P_{\bar W}$ agree with the Taylor expansion of $F_j$ at the origin through total degree three: $\mathcal P_\Bern$ because the map from $(\bar W,\bar U_1,\bar U_0)$ to $\bar{\mathcal V}$ is polynomial,
-and $\mathcal P_{\bar W}$ because it is the conditional expansion with
-$r=\bar W$. Hence their difference consists only of terms of total
-degree at least four in quantities that are $O_{L^k}(n^{-1/2})$.
-Under Assumption \ref{assu:moments},
+where smoothness on $[-\eta,\eta]$ and agreement through degree
+three imply
 \[
-\|\mathcal P_\Bern-\mathcal P_{\bar W}\|_{L^2}
-=
-O(n^{-2}).
+|\rho_\alpha(u)|\le C|u|^{4-k}.
 \]
-Also,
+Here $\alpha$ is a multi-index and $d^\alpha$ is the corresponding
+product of coordinates. This representation is useful because the
+degree in the arm-mean deviations never exceeds three: sixth moments
+of $U^{(w)}$ suffice for the squared comparison.
+
+\emph{Step 2: establish the mean-square bounds conditionally on the assignment.}
+On $\mathcal A_\eta$, both arm sizes are proportional to $n$.
+The centered sample-mean moment identities used in Lemma
+\ref{lemm:conditional} give, for $k=1,2,3$,
 \[
-\|\mathcal P_\Bern+\mathcal P_{\bar W}-2\tau\|_{L^2}
-=
-O(n^{-1/2}),
+\EEE[\|d\|^{2k}\mid W]\le C_k n^{-k}.
 \]
-so Cauchy--Schwarz gives
+The constants are uniform over assignments in $\mathcal A_\eta$.
+Also, the centered binomial mean satisfies
+$\EEE[|u|^{2s}]=O(n^{-s})$ for each fixed positive integer $s$.
+Conditioning first on $W$, each term in the squared comparison is
+bounded using
 \[
-\left|
-\EEE\left[
-(\mathcal P_\Bern-\tau)^2
--
-(\mathcal P_{\bar W}-\tau)^2
-\right]
-\mathbf 1\{|\bar W-\tfrac12|\le\eta\}
-\right|
-=
-O(n^{-5/2}).
+\EEE[|u|^{8-2k}|d^\alpha|^2
+\mathbf 1_{\mathcal A_\eta}]
+\le C n^{-k}\EEE[|u|^{8-2k}]
+=O(n^{-4}),
+\qquad |\alpha|=k.
 \]
-Finally, Hoeffding's inequality gives
+For $k=0$, use $\EEE[u^8]=O(n^{-4})$ directly. Since there are
+finitely many terms, this proves
 \[
-\Pr\left(|\bar W-\tfrac12|>\eta\right)
-\le 2e^{-2n\eta^2},
+\|(\mathcal P_\Bern-\mathcal P_{\bar W})
+\mathbf 1_{\mathcal A_\eta}\|_{L^2}=O(n^{-2}).
 \]
-so the complement contributes an exponentially small term, which is
-$O(n^{-5/2})$. This proves the claim.
+The same conditional moment bounds give
+\[
+\|(\mathcal P_{\bar W}-\tau)
+\mathbf 1_{\mathcal A_\eta}\|_{L^2}=O(n^{-1/2}).
+\]
+Indeed, its constant term is $\tau$, its remaining terms have
+degrees one through three in $d$, and its coefficients are uniformly
+bounded. The preceding comparison then gives the same order for
+$\mathcal P_\Bern-\tau$ on this event. Factoring the difference of
+squares and applying Cauchy--Schwarz yields
+\[
+\left|\EEE\left[
+\{(\mathcal P_\Bern-\tau)^2
+-(\mathcal P_{\bar W}-\tau)^2\}
+\mathbf 1_{\mathcal A_\eta}\right]\right|
+=O(n^{-5/2}).
+\]
+
+\emph{Step 3: control the expectation on extreme assignments.}
+The Bernoulli polynomial is a fixed cubic polynomial of empirical
+raw moments, so
+\[
+|\mathcal P_\Bern-\tau|^2
+\le C\{1+\|\bar{\mathcal V}\|^6\}.
+\]
+Conditionally on any $W$, Jensen's inequality and the finite sixth
+moments of the raw-moment coordinates imply
+\[
+\EEE[|\mathcal P_\Bern-\tau|^2\mid W]\le C',
+\]
+with $C'$ independent of $W$ and $n$. Consequently, Hoeffding's
+inequality gives the required expectation bound, rather than only a
+probability bound:
+\[
+\EEE[(\mathcal P_\Bern-\tau)^2
+\mathbf 1_{\mathcal A_\eta^c}]
+\le C'\Pr(\mathcal A_\eta^c)
+\le 2C'e^{-2n\eta^2}.
+\]
+Finally, conditionally on each assignment in $\mathcal A_\eta$,
+the second moment of $\mathcal P_{\bar W}-\tau$ equals
+$\MSEexp_{\CRT,\bar W}(\htau_j)$ by the two-sample
+representation. Combining the three steps proves the lemma.
 \end{proof}
 
 The proof of Theorem \ref{theo:deficiency} combines these lemmas, a
@@ -573,9 +781,19 @@ complete randomization with $n_1=\lfloor n/2\rfloor$ treated units,
 \end{theo}
 
 \begin{proof}
+The correction comes from treatment imbalance: Bernoulli assignment
+occasionally produces unequal arms, where IREG has a first-order
+advantage. Averaging this advantage contributes $-4G/n^2$ to the
+Bernoulli comparison. A balanced trial removes that contribution.
+
+\emph{Step 1: average the first-order variance difference.}
 Let $n_1=\sum_{i=1}^n W_i$ under the Bernoulli design and write
 $r=n_1/n$. Conditional on $n_1=m$, the treatment assignment has the same distribution as a CRT with treatment fraction $r$. Fix
-$\eta\in(0,\frac12)$. By Lemma \ref{lemm:bern_conditional}, $\MSEexp_\Bern$ is, up to $O(n^{-5/2})$, the average over $n_1$ of
+$\eta\in(0,\frac12)$ and write
+$\mathcal A_\eta=\{|r-1/2|\le\eta\}$. All expectations of
+functions containing $r^{-1}$ or $(1-r)^{-1}$ below are restricted to
+$\mathcal A_\eta$; their products with the indicator are defined
+as zero off that event. By Lemma \ref{lemm:bern_conditional}, $\MSEexp_\Bern$ is, up to $O(n^{-5/2})$, the average over $n_1$ of
 $\MSEexp_{\CRT,r}$ restricted to $|r-\frac12|\le\eta$, and by Lemma \ref{lemm:conditional} the latter admits the expansion \eqref{eq:conditional_expansion} uniformly on that set, with $V_j$ and $c_j$ infinitely differentiable. At treatment fraction $r$ the first-order variance difference is, by Proposition
 \ref{prop:first_order},
 \[
@@ -591,17 +809,23 @@ and
 \qquad
 u=r-\tfrac12.
 \]
-Under Bernoulli randomization with $\pi=1/2$, $\EEE[u^2]=1/(4n)$ and $\EEE[u^4]=O(n^{-2})$, so
+Under Bernoulli randomization with $\pi=1/2$,
+$\EEE[u^2]=1/(4n)$ and $\EEE[u^4]=O(n^{-2})$.
+Restricting these bounded moments to $\mathcal A_\eta$ changes
+them by an exponentially small amount. The event is symmetric under
+$u\mapsto-u$, so $\EEE[u\mathbf 1_{\mathcal A_\eta}]=0$.
+It follows that
 \[
 \frac{1}{n}
-\EEE\big[V_{\IREG}(r)-V_{\REG}(r)\big]
+\EEE\big[\{V_{\IREG}(r)-V_{\REG}(r)\}\mathbf 1_{\mathcal A_\eta}\big]
 =
 -\frac{4G}{n^2}+O(n^{-3}).
 \]
+\emph{Step 2: average the second-order coefficient.}
 For the second-order coefficients, a second-order Taylor expansion of
-$c_\IREG-c_\REG$ around $1/2$ together with $\EEE[u]=0$ and $\EEE[u^2]=O(n^{-1})$ gives
+$c_\IREG-c_\REG$ around $1/2$ together with the restricted moment identities just established gives
 \[
-\EEE[c_{\IREG}(r)-c_{\REG}(r)]
+\EEE[\{c_{\IREG}(r)-c_{\REG}(r)\}\mathbf 1_{\mathcal A_\eta}]
 =
 c_{\IREG}(1/2)-c_{\REG}(1/2)+O(n^{-1}).
 \]
@@ -622,6 +846,7 @@ D_{\Bern}
 =
 c_{\IREG}(1/2)-c_{\REG}(1/2)-4G.
 \]
+\emph{Step 3: fix the arm sizes.}
 Under balanced complete randomization, $r=1/2$ for even $n$, giving
 \[
 D_{\CRT}
@@ -642,6 +867,15 @@ the smoothness of $c_\IREG-c_\REG$ gives an $O(n^{-1})$ change in the
 second-order coefficient, which is also $O(n^{-3})$ after division by
 $n^2$. Thus the same expansion holds for odd $n$.
 \end{proof}
+
+\subsection{The second-order constant under Bernoulli assignment}
+
+We now calculate $D_\Bern$. The tensor notation below is used only to
+organize the contractions in the Taylor expansion; Lemma
+\ref{lemm:matrix} converts the result to the matrix notation of the main
+theorem. Here $F$ captures a fourth-moment contraction, $Q$ and
+$\mathcal R$ capture third-moment contractions, and $A_P,B_P,C_P$
+combine third moments with arm-specific residual structure.
 
 \begin{theo}
 \label{theo:bern_deficiency}
@@ -695,6 +929,7 @@ D_{\Bern}
 \end{theo}
 
 \begin{proof}
+\emph{Step 1: remove population main effects and whiten the covariates.}
 Both REG and IREG contain the regressors $1$, $W$ and $X$.
 Subtracting any linear combination of these regressors from the outcome changes the fitted coefficient on $W$ by the corresponding amount while leaving the estimation error unchanged, so we may subtract the population main effects and the term $\tau W_i$ and work with the exact representation
 \[
@@ -715,23 +950,26 @@ W_i=\tfrac12+\omega_i,
 \omega_i^2=\tfrac14.
 \]
 
+\emph{Step 2: identify the three second-order contributions.}
 Let $\mathcal V_i$ denote the vector of raw-moment coordinates needed to evaluate the REG or IREG coefficient map, and adopt the notation of
 Definition \ref{def:msexp}, so that $\htau=g(\bar{\mathcal V})$ and
 $\tilde\tau_n$ is given by \eqref{eq:hall_expansion}. Let
 \[
 \Sigma^{\mathcal V}_{ij}
 =
-\Cov(\mathcal V_i,\mathcal V_j),
+\Cov(\mathcal V_{1,i},\mathcal V_{1,j}),
 \qquad
 \mu^{\mathcal V}_{3,ijk}
 =
 \EEE[
-(\mathcal V_i-\mu_i)
-(\mathcal V_j-\mu_j)
-(\mathcal V_k-\mu_k)
+(\mathcal V_{1,i}-\mu_i)
+(\mathcal V_{1,j}-\mu_j)
+(\mathcal V_{1,k}-\mu_k)
 ]
 \]
-be the covariance and third central-moment tensors of the moment vector. Expanding the square of \eqref{eq:hall_expansion} and using the second- and third-order moments of sample means gives the order-$n^{-1}$ correction to $n\MSEexp$ as $\mathcal T_1+\mathcal T_2+\mathcal T_3$ with
+be the covariance and third central-moment tensors of one unit's
+raw-moment vector; the first subscript in $\mathcal V_{1,i}$ denotes
+the unit and the second denotes its coordinate. Expanding the square of \eqref{eq:hall_expansion} and using the second- and third-order moments of sample means gives the order-$n^{-1}$ correction to $n\MSEexp$ as $\mathcal T_1+\mathcal T_2+\mathcal T_3$ with
 \begin{equation}
 \label{eq:hall_T1}
 \mathcal T_1
@@ -763,13 +1001,25 @@ a_iH_{jk}\mu^{\mathcal V}_{3,ijk},
 \Sigma^{\mathcal V}_{il}\Sigma^{\mathcal V}_{jk}
 },
 \end{equation}
-the remaining terms being $O(n^{-3/2})$ in $n\MSEexp$ under Assumption
-\ref{assu:moments}. The difference between the order-$n^{-2}$ MSE
+The omitted terms are $O(n^{-2})$ in $n\MSEexp$:
+the non-pairing part of the fourth moment and all degree-five and
+degree-six products in the squared polynomial contribute $O(n^{-3})$
+to $\MSEexp$, by the same centered sample-mean moment count as in
+Lemma \ref{lemm:conditional}. This is also stronger than the
+$O(n^{-5/2})$ MSE remainder stated in the theorem. The difference between the order-$n^{-2}$ MSE
 coefficients of REG and IREG is obtained by evaluating these three
 contractions for the two estimators.
 
-The population Gram matrices and their inverses in the whitened
-coordinates are
+The three contributions have a simple origin: $\mathcal T_1$ is the
+product of the linear and quadratic Taylor terms, $\mathcal T_2$ is
+the square of the quadratic term, and $\mathcal T_3$ is the product of
+the linear and cubic terms. Thus the calculation requires derivatives
+only through order three.
+
+\emph{Step 3: compute derivatives from the least-squares normal equations.}
+For REG, order the regressors as $(1,Z,W)$; for IREG, use
+$(1,Z,W,WZ)$. In these orders, the population Gram matrices and their
+inverses in the whitened coordinates are
 \[
 A_R=
 \begin{pmatrix}
@@ -808,6 +1058,9 @@ A_I^{-1}
 \theta_I=(0,0,0,\gamma).
 \]
 
+Let $b$ be the population regressor--outcome cross-moment vector.
+For a perturbation direction $h_s$ of the raw moments, write $dA_s$
+and $db_s$ for the corresponding perturbations of $A$ and $b$.
 Writing $\Omega=A^{-1}$ and $\theta=\Omega b$, differentiation of
 $A\theta=b$ gives the exact derivative identities
 \[
@@ -829,6 +1082,7 @@ D^3\theta[h_1,h_2,h_3]
 \Omega(db_{\varsigma_3}-dA_{\varsigma_3}\theta).
 \]
 
+\emph{Step 4: account for the centering in IREG.}
 REG's estimator is the treatment coefficient,
 $g_\REG(v)=\theta_W(v)$. IREG's is
 $g_\IREG(v)=\theta_W(v)+\bar z(v)^\top\theta_{WZ}(v)$, where
@@ -856,11 +1110,14 @@ D^3\theta_W[h_1,h_2,h_3]
 \sum_{\{i,j,k\}=\{1,2,3\}}
 D\bar z[h_i]^\top D^2\theta_{WZ}[h_j,h_k],
 \]
-the sum running over the three choices of $i$. The covariance and
+where the sum means the three terms with
+$(i,j,k)=(1,2,3),(2,1,3),(3,1,2)$. The covariance and
 third-moment blocks of $\mathcal V_i$ are products of moments of
 $(Z_i,\omega_i,\varepsilon_i)$ under the canonical representation of
 Section \ref{sec:asymptotics}, with $W_i$ marginally Bernoulli$(1/2)$.
 
+\emph{Step 5: evaluate the contractions and take IREG minus REG.}
+Write $\Delta\mathcal T_k=\mathcal T_{k,\IREG}-\mathcal T_{k,\REG}$.
 Substituting these derivative tensors and the covariance and third-moment blocks of $\mathcal V_i$ into \eqref{eq:hall_T1}--\eqref{eq:hall_T3_bern}, we reduce the resulting indexed expressions using tensor symmetries, dummy-index relabeling, and the identities implied by $\EEE[ZZ^\top]=I_p$ and $\omega_i^2=1/4$. This gives
 \begin{align}
 \Delta\mathcal T_1
@@ -894,15 +1151,47 @@ symbolic. The symbolic remainder in each of the three rows is
 identically zero; the verification is implemented in
 \texttt{verification/general\char`\_p\char`\_symbolic\char`\_certificate.py} in the replication repository and runs in under a minute.
 
-Summing the three rows, the $\Xi_\gamma$ terms cancel and
-\eqref{eq:Dbern} follows.
+\emph{Step 6: collect the terms.}
+Adding the three rows gives the coefficient of $G$ as
+$2-3-(2p+6)=-(2p+7)$ and the coefficient of $F$ as $2-1=1$.
+The $\Xi_\gamma$ terms cancel. The remaining coefficients are $-1$
+for $Q$, $-3$ for $\mathcal R$, and $(-16,-8,8)$ for
+$(A_P,B_P,C_P)$, together with the two residual terms in
+\eqref{eq:Dbern}. This proves the stated formula.
 
-The division of labour is as follows. Derived by hand and displayed
-above: the expansion terms \eqref{eq:hall_T1}--\eqref{eq:hall_T3_bern}, the Gram matrices and coefficients at $\mu$, the derivative identities, the product-rule structure of the IREG centering functional, and the reduction rules. Verified symbolically by the accompanying implementation: the substitution of these objects into \eqref{eq:hall_T1}--\eqref{eq:hall_T3_bern} and the reduction of the resulting indexed sums to the rows \eqref{eq:dT1}--\eqref{eq:dT3}, with symbolic $p$ and zero remainder. The resulting constant is checked independently by Monte Carlo in Appendix
+One contraction can be checked directly without the full tensor
+calculation. The third covariance pairing in
+\eqref{eq:hall_T2_bern} is
+\[
+\frac14(H_{ij}\Sigma^{\mathcal V}_{ij})^2.
+\]
+It is the square of the leading bias coefficient. By the bias
+calculation in Lemma \ref{lemm:bias}, those coefficients at balanced
+allocation are $b_I=-4\tr(P)$ and
+$b_R=-4\tr(P)-\gamma^\top q$. They are also the Bernoulli
+coefficients: the conditional bias coefficient is smooth in $r$,
+and the polynomial comparison above changes the mean by only
+$O(n^{-2})$. Thus this pairing contributes
+\[
+b_I^2-b_R^2
+=-(\gamma^\top q)^2
+-8(\gamma^\top q)\tr(P)
+=-Q-8B_P.
+\]
+These are exactly the two bias-squared terms in the second row.
+The other pairings and the linear--cubic contraction account for the
+remaining variance contributions.
+
+The computational certificate checks the remaining algebra. Derived
+by hand and displayed above: the expansion terms \eqref{eq:hall_T1}--\eqref{eq:hall_T3_bern}, the Gram matrices and coefficients at $\mu$, the derivative identities, the product-rule structure of the IREG centering functional, and the reduction rules. Verified symbolically by the accompanying implementation: the substitution of these objects into \eqref{eq:hall_T1}--\eqref{eq:hall_T3_bern} and the reduction of the resulting indexed sums to the rows \eqref{eq:dT1}--\eqref{eq:dT3}, with symbolic $p$ and zero remainder. The resulting constant is checked independently by Monte Carlo in Appendix
 \ref{sec:numerical-verification}.
 \end{proof}
 
-Theorems \ref{theo:crt_reduction} and \ref{theo:bern_deficiency} give
+\subsection{Recovering the matrix formula in the main theorem}
+
+Adding the $4G$ correction of Theorem \ref{theo:crt_reduction} to
+the Bernoulli constant in Theorem \ref{theo:bern_deficiency} changes
+only the coefficient of $G$, from $-(2p+7)$ to $-(2p+3)$. Hence
 \begin{equation}
 \label{eq:unsimp}
 D_p
@@ -1005,7 +1294,14 @@ C_P
 \]
 \end{proof}
 
-We close with an exact identity that is used by the variance-reduced
+\subsection{An exact estimator difference and the leading biases}
+
+The next identity explains both the first-order equivalence of REG
+and IREG and the control variate used in the numerical verification.
+Their difference is a product of covariate imbalance, scatter-matrix
+imbalance, and the difference between the fitted arm slopes.
+
+We begin with an exact identity used by the variance-reduced
 verification of Appendix \ref{sec:numerical-verification}.
 
 \begin{lemm}[Exact difference identity]
@@ -1053,9 +1349,12 @@ and consequently
 (\mathcal S_1+\mathcal S_0)^{-1}
 (\mathcal S_1-\mathcal S_0)
 (\hbeta_1-\hbeta_0)
-=
-O_P(n^{-1}).
+=O_P(n^{-1}).
 \]
+Here the algebraic identity is exact on the stated invertibility
+event; the stochastic order uses Assumption \ref{assu:moments}.
+The probability of invertibility tends to one, since the normalized
+within-arm scatter matrices converge to $\Sigma\succ0$.
 \end{lemm}
 
 \begin{proof}
@@ -1100,12 +1399,24 @@ d_X=O_P(n^{-1/2}),
 \]
 \end{proof}
 
-In whitened coordinates the leading term of this difference is
+In whitened coordinates, the same Taylor expansion gives
 \[
-\tfrac14d_Z^\top(A_1-A_0)\gamma,
+\htau_\IREG-\htau_\REG
+=\tfrac14d_Z^\top(A_1-A_0)\gamma+O_P(n^{-3/2}),
 \]
-with $A_w$ the arm-$w$ mean of $ZZ^\top-I_p$; this is the control
-variate used in \eqref{eq:cv_identity} below.
+where $A_w$ is the arm-$w$ mean of $ZZ^\top-I_p$.
+Indeed, replacing each centered scatter matrix by its uncentered
+second-moment version changes its normalized value by $O_P(n^{-1})$;
+the inverse-Gram and slope expansions each contribute another
+$O_P(n^{-1/2})$ correction to their leading terms. Multiplication
+by $d_Z=O_P(n^{-1/2})$ gives the stated remainder.
+The leading quadratic term is used in the control variate of
+\eqref{eq:cv_identity} below.
+
+The final lemma separates the leading biases of the two estimators.
+Both share the arm-specific residual contribution; REG has the
+additional contribution $-\gamma^\top S/n$ from the interaction of
+covariate skewness and treatment-effect heterogeneity.
 
 \begin{lemm}[Leading expansion bias]
 \label{lemm:bias}
@@ -1123,110 +1434,99 @@ Under Assumption \ref{assu:moments} and balanced complete randomization,
 \end{lemm}
 
 \begin{proof}
-Work in whitened coordinates with $m=n/2$ units per arm, arm slopes
-$b_1-b_0=\gamma$, projection residuals $\varepsilon_i(w)$ and within-arm scatter matrices $\mathcal S_w$. By Remark \ref{rema:bias}, the
-expansion bias is the mean of the quadratic part of $\htau-\tau$, up to
-$O(n^{-2})$. For IREG,
+We work entirely with Taylor polynomials, so the argument does not
+require expectations of inverse sample Gram matrices. First suppose
+$n$ is even and set $m=n/2$. In whitened coordinates, define
 \[
-\bar Z_1-\bar Z
-=
--(\bar Z_0-\bar Z)
-=
-\frac12(\bar Z_1-\bar Z_0),
+d_Z=\bar Z_1-\bar Z_0,\qquad
+t_w=\frac1m\sum_{i:W_i=w}Z_i\varepsilon_i(w),\qquad
+A_w=\frac1m\sum_{i:W_i=w}(Z_iZ_i^\top-I_p).
 \]
-so
+Each is a centered sample-mean quantity. Write
+$b_w$ for the population arm slope, so $b_1-b_0=\gamma$.
+The common linear error term is
 \[
-\htau_\IREG-\tau
-=
-\bar\varepsilon_1-\bar\varepsilon_0
-+\gamma^\top\bar Z
--\tfrac12(\bar Z_1-\bar Z_0)^\top
-\{(\hat b_1-b_1)+(\hat b_0-b_0)\},
+L=\gamma^\top\bar Z+\bar\varepsilon_1-\bar\varepsilon_0,
+\qquad \EEE[L]=0.
 \]
-and the linear part of $\hat b_w-b_w$ is
+
+\emph{Step 1: identify the quadratic terms.}
+The linear Taylor term of an arm slope is $t_w$. The linear Taylor
+term of the pooled slope, expanded around $(b_1+b_0)/2$, is
 \[
-m^{-1}
-\sum_{i:W_i=w}Z_i\varepsilon_i(w),
+\frac{t_1+t_0}{2}+\frac14(A_1-A_0)\gamma.
 \]
-which enters the quadratic part of $\htau_\IREG-\tau$ through its
-product with $\bar Z_1-\bar Z_0$. The arms are independent
-(Lemma \ref{lemm:two_sample}), so
+To verify the latter expression, expand the pooled normal equations:
+the first perturbation of the within-arm Gram matrix is
+$(A_1+A_0)/2$, whereas its cross-moment perturbation includes
+$(A_1b_1+A_0b_0)/2+(t_1+t_0)/2$.
+Subtracting the Gram perturbation times $(b_1+b_0)/2$ leaves the
+displayed expression. Products of arm means enter only at degree two
+in the slope and hence at degree three in the treatment estimator.
+
+The quadratic estimator terms are therefore
 \[
-\EEE[
-(\bar Z_1-\bar Z_0)^\top(\hat b_1-b_1)
-]
-=
-m^{-1}\EEE[\|Z\|^2\varepsilon(1)]
-+O(n^{-2})
+q_{2,I}=-\frac12d_Z^\top(t_1+t_0),
+\qquad
+q_{2,R}=-d_Z^\top\left\{
+\frac{t_1+t_0}{2}+\frac14(A_1-A_0)\gamma\right\}.
 \]
-and
+The cubic Taylor terms have expectations $O(n^{-2})$, because a
+product of three centered sample means has expectation of that order.
+Thus the leading expansion biases equal $\EEE[q_{2,I}]$ and
+$\EEE[q_{2,R}]$, respectively, with remainder $O(n^{-2})$.
+
+\emph{Step 2: evaluate the residual contribution.}
+Independence of the arms and centering give the exact identities
 \[
-\EEE[
-(\bar Z_1-\bar Z_0)^\top(\hat b_0-b_0)
-]
-=
--m^{-1}\EEE[\|Z\|^2\varepsilon(0)]
-+O(n^{-2}),
+\EEE[d_Z^\top t_1]
+=\frac1m\EEE[\|Z\|^2\varepsilon(1)],
+\qquad
+\EEE[d_Z^\top t_0]
+=-\frac1m\EEE[\|Z\|^2\varepsilon(0)].
 \]
-which gives
+Consequently,
 \[
--(2m)^{-1}
-\tr\{
+\EEE[q_{2,I}]
+=-\frac{1}{2m}\tr\left\{
 \EEE[ZZ^\top\varepsilon(1)]
--
-\EEE[ZZ^\top\varepsilon(0)]
-\}
-=
--\frac{4\tr(\mathcal E_W)}{n}.
+-\EEE[ZZ^\top\varepsilon(0)]\right\}
+=-\frac{4\tr(\mathcal E_W)}{n}.
 \]
-For REG, the pooled slope $\hat b$ estimates
-$\bar b=(b_1+b_0)/2$ and
+
+\emph{Step 3: evaluate REG's additional heterogeneity contribution.}
+For either arm,
 \[
-\htau_\REG-\tau
-=
-\bar\varepsilon_1-\bar\varepsilon_0
-+\tfrac12\gamma^\top(\bar Z_1+\bar Z_0)
--
-(\bar Z_1-\bar Z_0)^\top(\hat b-\bar b).
+\EEE[\bar Z_w^\top A_w\gamma]
+=\frac1m\EEE[Z^\top(ZZ^\top-I_p)\gamma]
+=\frac{\gamma^\top S}{m}.
 \]
-The pooled residual of unit $i$ is
-$\varepsilon_i(W_i)+(W_i-\frac12)\gamma^\top Z_i$ up to centering, so
-the linear part of $\hat b-\bar b$ is
+The cross-arm terms vanish, so
 \[
-n^{-1}
-\sum_i
-Z_i
-\{
-\varepsilon_i(W_i)
-+
-(W_i-\tfrac12)\gamma^\top Z_i
-\},
+\EEE[d_Z^\top(A_1-A_0)\gamma]
+=\frac{2\gamma^\top S}{m}.
 \]
-which again enters the quadratic part of $\htau_\REG-\tau$ through its
-product with $\bar Z_1-\bar Z_0$, and
-\[
-\EEE[
-(\bar Z_1-\bar Z_0)^\top(\hat b-\bar b)
-]
-=
-n^{-1}
-\left\{
-\tr\EEE[ZZ^\top\varepsilon(1)]
--
-\tr\EEE[ZZ^\top\varepsilon(0)]
-+
-\gamma^\top S
-\right\}
-+O(n^{-2}),
-\]
-which gives the second display.
+Multiplication by $-1/4$ adds $-\gamma^\top S/n$ to REG's
+bias, proving both formulas for even $n$.
+
+For odd $n$, the arm fraction differs from $1/2$ by $O(n^{-1})$.
+The leading quadratic expectation is $n^{-1}$ times a smooth
+function of that fraction, by the same moment calculation as in
+Lemma \ref{lemm:conditional}. Its change is therefore $O(n^{-2})$.
+The formulas hold for odd $n$ with the same stated remainder.
 \end{proof}
 
 \section{Numerical verification of Theorem \ref{theo:deficiency}}
 \label{sec:numerical-verification}
 
 The symbolic certificate verifies the algebra of Theorem
-\ref{theo:bern_deficiency} exactly. The role of simulation is different: it checks that the constant $D_p$ governs the sampling behavior of the estimators, that the CRT correction in Theorem \ref{theo:crt_reduction} is correct, and that no terms were lost in the derivation. Simulation cannot prove the theorem, so we use several checks that are designed to distinguish the stated formula from plausible alternatives.
+\ref{theo:bern_deficiency} exactly. Simulation serves a different
+purpose: it assesses whether the fitted estimators approach the
+predicted constant in the chosen designs and whether the experiment
+can distinguish that constant from plausible alternatives, including
+an omitted CRT correction. These checks provide numerical evidence;
+they do not replace the proof or establish the additional conditions
+needed to transfer expansion MSE to finite-sample MSE.
 
 \paragraph{Exact targets.}
 We use data-generating processes with whitened covariates having
@@ -1243,7 +1543,13 @@ active in at least one design: Gaussian homoskedastic covariates;
 centered-exponential covariates with heterogeneity; centered-exponential covariates with heteroskedasticity and $\gamma=0$; centered-exponential covariates with heterogeneity, arm-specific misspecification, and arm-specific heteroskedasticity; Gaussian covariates with arm-specific misspecification and heteroskedasticity; and a mixed skewed/Gaussian design. These designs are analytically tractable and differ from the inference designs of Section \ref{sec:feasible}; their exact definitions are in \texttt{simulations/dgps.py} of the replication repository.
 
 \paragraph{A variance-reduced estimator of $D_p$.}
-The natural statistic $n^2\{\widehat\MSE_\IREG-\widehat\MSE_\REG\}$ has an unfavorable variance rate. By Lemma \ref{lemm:exact_diff}, the leading term of $\htau_\IREG-\htau_\REG$ is
+The target is an $n^{-2}$ difference between two MSEs whose leading
+terms are of order $n^{-1}$. Direct Monte Carlo estimation is therefore
+noisy. Throughout this subsection, let
+$e_j=\htau_j-\tau$ denote the estimation error on a single simulated
+dataset, and let $B$ be the number of independent replications.
+The natural statistic
+$n^2\{\widehat\MSE_\IREG-\widehat\MSE_\REG\}$ amplifies this noise. By Lemma \ref{lemm:exact_diff}, the leading term of $\htau_\IREG-\htau_\REG$ is
 \[
 d_1=\tfrac14d_Z^\top(A_1-A_0)\gamma,
 \]
@@ -1264,8 +1570,9 @@ term has variance $O(n)$, so the corresponding per-replication standard
 deviation is $O(\sqrt n)$; in the Gaussian design below, it increases with
 $n$ as expected.
 
-We remove this leading fluctuation with a control variate whose
-finite-$n$ expectation is known exactly. Let $d_Z=\bar Z_1-\bar Z_0$, let $A_w$ be the arm-$w$ mean of $ZZ^\top-I_p$, and define
+We subtract $2d_1L$ on each replication and add its expectation back.
+This leaves the finite-sample target unchanged while removing the
+leading random fluctuation. The expectation is available exactly. Let $d_Z=\bar Z_1-\bar Z_0$, let $A_w$ be the arm-$w$ mean of $ZZ^\top-I_p$, and define
 \[
 d_1=\tfrac14d_Z^\top(A_1-A_0)\gamma,
 \qquad
@@ -1284,7 +1591,8 @@ divided by $m^2$, giving the exact identity
 \{\gamma^\top Z+\varepsilon(1)-\varepsilon(0)\}
 \Big].
 \end{equation}
-Hence
+Hence, when the fitted estimators are defined and have finite second
+moments, the statistic
 \[
 \hat D_p
 =
@@ -1296,12 +1604,30 @@ n^2\big(e_{\IREG,b}^2-e_{\REG,b}^2\big)
 +
 2n^2\,\EEE[d_1L]
 \]
-is unbiased for the same finite-$n$ scaled MSE difference as the raw
-statistic. Moreover,
+is unbiased for
+$n^2\{\MSE(\htau_\IREG)-\MSE(\htau_\REG)\}$, the same
+finite-$n$ target as the raw statistic. It is not, at a fixed $n$, an
+unbiased estimator of the limiting constant $D_p$: a finite-sample
+remainder can remain. Moreover,
 \[
-n^2\{e_\IREG^2-e_\REG^2-2d_1L\}=O_P(1),
+n^2\{e_\IREG^2-e_\REG^2-2d_1L\}=O_P(1).
 \]
-so its per-replication variance is $O(1)$ rather than $O(n)$.
+This is a statement about stochastic order, not a variance bound.
+For a bounded per-replication variance, one additionally needs
+\[
+\sup_n\EEE\left[
+\left\{n^2(e_\IREG^2-e_\REG^2-2d_1L)\right\}^2
+\right]<\infty.
+\]
+This condition is not implied by $O_P(1)$ or by Assumption
+\ref{assu:moments}: the fitted slopes contain inverse sample Gram
+matrices. Under this additional condition, the adjusted statistic
+has variance $O(1)$, and its Monte Carlo standard error is
+$O(B^{-1/2})$ uniformly in $n$. Without it, the control variate still
+removes the displayed leading fluctuation in probability, but bounded
+variance must be checked separately. The standard errors below are
+empirical simulation summaries, not a consequence of the population
+moment assumption alone.
 
 Both statistics are reported by the replication code. In the Gaussian
 design, the raw per-replication standard deviation increases from $151$ at $n=200$ to $293$ at $n=800$, while the control-variate standard deviation is $56$ and $55$, respectively. At $n=3200$, the control-variate Monte Carlo standard error is ten times smaller than that of the raw statistic.
@@ -1310,9 +1636,9 @@ design, the raw per-replication standard deviation increases from $151$ at $n=20
 Table \ref{tab:validation} reports the exact targets and the
 control-variate estimates at $n\in\{200,800,3200\}$, using
 $B=400{,}000$ replications for the two smaller sample sizes and
-$B=120{,}000$ for $n=3200$. The control variate keeps the
-per-replication standard deviation bounded, making the Monte Carlo
-errors small enough to resolve the finite-$n$ remainder.
+$B=120{,}000$ for $n=3200$. In these simulations, the control variate substantially reduces the
+observed per-replication standard deviation, making the estimated
+Monte Carlo errors small enough to assess finite-$n$ discrepancies.
 
 The largest discrepancy occurs in the all-blocks design (fourth row).
 There the estimate is $32.40$ at $n=200$, compared with the target
@@ -1353,8 +1679,9 @@ DGP (active blocks) & $D_p$ (exact) & $n=200$ & $n=800$ & $n=3200$ \\
 \end{table}
 
 \paragraph{Power: what the verification would reject.}
-A useful verification should be able to distinguish the stated formula
-from plausible alternatives. Table \ref{tab:ablation} reports
+Agreement with $D_p$ is more informative when the simulation can also
+detect errors in the formula. We therefore compare the estimates with
+several deliberately perturbed candidate constants. Table \ref{tab:ablation} reports
 $z$-statistics at $n=3200$ for the exact $D_p$ and several perturbed
 formulas: the Bernoulli constant $D_\Bern=D_p-4G$, which omits the CRT
 correction; the Gaussian special case $-(p+1)G$; and versions of $D_p$
@@ -1490,7 +1817,11 @@ Theorem \ref{theo:deficiency} is an asymptotic result. A separate question is wh
 1+\Delta/n
 \]
 is accurate for the finite-sample MSE ratio. We examine this in the
-scalar lognormal family of the introduction, with $\sigma(X)=1+X$, now with a treatment-effect slope of $0.4$ fixed while $X\sim\mathrm{LogNormal}(0,s^2)$ varies. As $s$ increases, the covariate tails become heavier and the higher moments entering $\Delta$ grow rapidly.
+scalar lognormal family of the introduction, with $\sigma(X)=1+X$, now with a treatment-effect slope of $0.4$ fixed while $X\sim\mathrm{LogNormal}(0,s^2)$ varies. The ratio compares IREG with REG, so values above one favor REG.
+As $s$ increases, the covariate tails become heavier and the higher
+moments entering $\Delta$ grow rapidly. We ask whether those
+population moments describe the MSE comparison accurately at the
+sample sizes used in the simulations.
 
 \begin{table}[htbp]
 \centering
@@ -1516,8 +1847,11 @@ same phenomenon more sharply. With $s=1.8$, $\sigma(X)=1+1.5X$, and
 treatment-effect slope $0.3$, we have $\Delta\approx 3.9\times10^4$. The second-order prediction is then $78.5$, $20.4$, and $5.8$ at $n=500$, $2{,}000$, and $8{,}000$, compared with simulated MSE ratios of $1.68$, $1.34$, and $1.19$. The sign of the comparison is correct, but $1+\Delta/n$ is no longer a useful numerical approximation to the MSE ratio. In the same design, $R_\tau^2\approx0.009$, and the simulated coverage of IREG intervals without the plug-in correction is $85.6\%$ with HC1, $88.9\%$ with HC2, and $94.0\%$ with HC3, compared with $94.4\%$ for REG+HC1 and $96.7\%$ for REG+HC3; with the plug-in, IREG+HC1 covers $\gz{hte:ba:heavy_ex:IREG_HC1c:cov}\%$ (Table \ref{tab:battery}).
 
 \paragraph{Tail sensitivity.}
-The largest discrepancies occur when the moments entering $\Delta$ are
-dominated by the far tail. Table \ref{tab:tail} recomputes
+The deficiency is a population-moment calculation. If extreme values
+account for much of those moments, the asymptotic constant can be large
+even when samples of the sizes considered seldom reach that part of
+the distribution. The largest discrepancies occur in precisely these
+tail-dominated designs. Table \ref{tab:tail} recomputes
 $1+\Delta/n$ at $n=500$ after truncating the lognormal law at several
 high quantiles; the truncated moments are available in closed form.
 Truncating at the $1-10^{-4}$ quantile reduces $\Delta$ by one to three orders of magnitude, showing how strongly the deficiency depends on extreme covariate values. Even truncation at the $1-10^{-8}$ quantile still gives predictions several times larger than the simulated ratios.
@@ -1547,6 +1881,13 @@ Design & ratio & full law & $q=1-10^{-4}$ & $q=1-10^{-6}$ & $q=1-10^{-8}$ \\
 
 \section{Designs of the inference simulations}
 \label{sec:designs}
+
+This section specifies the data-generating processes used for the
+inference comparisons. These are separate from the analytically
+tractable verification designs of Appendix
+\ref{sec:numerical-verification}. Each comparison uses shared
+simulated datasets so that differences across interval procedures
+reflect the procedure rather than a different simulation draw.
 
 The designs of Tables \ref{tab:battery} and \ref{tab:plugin-cal} all have $n=500$, balanced complete randomization and \gz{hte:reps} replications, and every interval is computed on the same simulated datasets. The scalar lognormal designs extend the family of the introduction:
 \[

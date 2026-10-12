@@ -74,8 +74,11 @@ def summarize(a, tr, n):
     out["mse_ratio"] = float(r)
     out["mse_IREG"], out["mse_REG"] = float(eI.mean()), float(eR.mean())
     out["mse_ratio_mcse"] = float(np.std(eI - r * eR, ddof=1) / (eR.mean() * np.sqrt(ok.sum())))
-    out["plug_over_Gn"] = float(np.nanmean(a["plug"]) / Gn) if Gn > 0 else None
-    out["plug_mean"] = float(np.nanmean(a["plug"]))
+    # Interaction coefficients, and hence the plug-in, are not identified in rejected fits.
+    plug_ok = np.isfinite(a["I_est"]) & np.isfinite(a["plug"])
+    plug_mean = float(a["plug"][plug_ok].mean()) if plug_ok.any() else None
+    out["plug_over_Gn"] = plug_mean / Gn if Gn > 0 and plug_mean is not None else None
+    out["plug_mean"] = plug_mean
     out["frac_rank_deficient"] = float(np.mean(a["rankdef"])) if "rankdef" in a else 0.0
     out["frac_leverage_one"] = float(np.mean(a["lev1"] & a.get("I_okc", np.ones_like(a["lev1"])))) if "lev1" in a else 0.0
     # jackknife: replications in which some leave-one-out fit is rank deficient (omitted from the sum),

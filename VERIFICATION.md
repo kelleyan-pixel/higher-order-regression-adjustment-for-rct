@@ -60,6 +60,16 @@ cell-specific Monte Carlo standard errors).
 - `run_all.sh` stops on any LaTeX warning; `make_arxiv_bundle.sh` test-compiles the upload bundle with pdflatex
   alone.
 
+The plug-in diagnostic means in `hte_battery.json` exclude rejected IREG fits, whose interaction
+coefficients are not identified. This changes only the ancillary plug-in summaries for the rare-value
+design; the reported coverage, widths and MSE summaries are unchanged. In that design, MSE uses the
+replications with both point estimates available, coverage counts unavailable intervals as failures,
+and median width uses available intervals. The manuscript also reports the sensitivity to declaring
+the jackknife interval unavailable whenever any deletion is undefined.
+
+The current source has not yet had a verified clean compile after the targeted revisions; a Windows
+access-denied error prevented the editor compiler from starting. The stale compiled PDF was removed.
+
 ## Not verified
 
 Cross-platform reproducibility (tested on Linux x86_64 only); the sharpness of the moment condition; the
