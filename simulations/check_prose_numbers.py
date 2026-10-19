@@ -15,7 +15,11 @@ from run_example import population as population_
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 R = lambda f: json.load(open(os.path.join(ROOT, "results", f)))
-TEX = open(os.path.join(ROOT, "paper", "main.tex")).read()
+import re as _re
+# Compare against the typeset text only: drop LaTeX comments (an unescaped % to the end of the line), so that
+# sentences surviving only in commented-out drafts cannot satisfy a check.
+TEX = "\n".join(_re.sub(r"(?<!\\)%.*$", "", line)
+                 for line in open(os.path.join(ROOT, "paper", "main.tex")).read().split("\n"))
 
 SMALL = ["gauss_low", "misspec_null", "skew_null", "heavy_low", "ln12_small", "ln15_small", "ln15_g05", "heavy_ex",
          "ln20_small"]
@@ -44,8 +48,12 @@ def main():
     checks = [
         # (recomputed string, exact text that must appear in main.tex)
         # --- introduction
-        (f"{100 * (ex['intro_ratio']['500']['sim'] - 1):.1f}", "by $6.7\\%$ at $n=500$"),
-        (f"{ex['intro_population']['Delta']:.0f}", "expansion-MSE deficiency is 83 observations"),
+        # Introduction, example (1): "interacted regression has X% higher mean-squared error ... than simple
+        # regression" means MSE_IREG / MSE_REG - 1 (not 1 - MSE_REG / MSE_IREG, which is 6.3%).
+        (f"{100 * (ex['intro_ratio']['500']['sim'] - 1):.0f}\\%", "interacted regression has 7\\% higher mean-squared error"),
+        # the design of example (1) is the one simulated by run_example.py: log X ~ N(0, 1.1^2), sigma(X) = 1 + X, slope 0.9
+        (f"{math.sqrt(math.log(1 + ex['intro_population']['sd'] ** 2 / ex['intro_population']['mu'] ** 2)):.1f}^2",
+         "\\log(X_i) \\sim \\nn\\p{0, \\, 1.1^2}"),
         # --- Appendix C
         (f"{hr['500']['sim']:.2f}", "simulated MSE ratios of $1.68$"),
         (f"{hr['2000']['sim']:.2f}", "$1.68$, $1.34$, and"),
@@ -137,23 +145,23 @@ def main():
          and all(BA[k]["coverage"]["IREG_JK"] >= max(BA[k]["coverage"][m] for m in ("IREG_HC1c", "REG_HC1", "REG_JK")) for k in SKEWED_HTE),
          "REG undercovers with either variance estimator"),
         (all(BA[k]["coverage"]["IREG_JK"] >= max(BA[k]["coverage"][m] for m in ("IREG_HC1c", "REG_HC1", "REG_JK")) for k in SKEWED_HTE),
-         "IREG with JK is the most reliable procedure"),
+         "IREG with jackknife is the most reliable procedure"),
         (BA["rare"]["jackknife"]["REG"]["frac_reps_degenerate_loo"] < 0.001, "REG is essentially unaffected"),
         (all(abs(cal(k, "0.95", m) - 0.95) <= 0.02 and cal(k, "0.99", m) >= 0.983 for k in SMALL for m in ("IREG_HC1c", "REG_HC1"))
          and all(cal(k, "0.80", m) < 0.79 for k in ("ln12_small", "ln15_small", "ln15_g05", "heavy_ex", "ln20_small") for m in ("IREG_HC1c", "REG_HC1")),
          "HC1 intervals are close to nominal at $95\\%$ and $99\\%$ but undercover at $80\\%$ in the skewed designs"),
         (max(L_ - cal(k, f"{L_:.2f}", m) for k in SMALL for m in ("IREG_JK", "REG_JK") for L_ in (0.80, 0.95, 0.99))
          <= 2 * math.sqrt(0.8 * 0.2 / 20000),
-         "With JK, neither estimator is more than"),
+         "With the jackknife, neither estimator is more than"),
         (max(L_ - cal(k, f"{L_:.2f}", "REG_JK") for k in SMALL for L_ in (0.80, 0.95, 0.99)) <= 2 * math.sqrt(0.8 * 0.2 / 20000),
-         "reaches nominal coverage, up to Monte Carlo error, at every level we examine"),
+         "consistently achieves at least nominal coverage"),
         (BA["ln15_large"]["coverage"]["IREG_JK"] < 0.92 and BA["heavy_high"]["coverage"]["REG_JK"] < 0.94,
          "REG undercovers with either variance estimator"),
         (max(BA["ln15_large"]["coverage"][m] for m in ("IREG_HC1c", "IREG_JK", "REG_HC1", "REG_JK")) < 0.93,
-         "no procedure reaches nominal coverage in the most extreme designs"),
+         "although it also reaches only"),
         (all(abs(cal(k, "0.95", m) - 0.95) <= 0.02 for k in SMALL for m in ("IREG_HC1c", "REG_HC1"))
          and min(cal(k, "0.80", "IREG_HC1c") for k in SMALL) < 0.76,
-         "but is miscalibrated across nominal levels"),
+         "the undercoverage shows up more at other nominal levels"),
         (all(abs(cal(k, "0.95", m) - 0.95) <= 0.02 for k in SMALL for m in ("IREG_HC1c", "REG_HC1")),
          "HC1 intervals are close to nominal at $95\\%$ and $99\\%$"),
         (all(cal(k, "0.99", m) >= 0.983 for k in SMALL for m in ("IREG_HC1c", "REG_HC1")), "is partly a crossing point"),

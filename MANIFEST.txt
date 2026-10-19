@@ -1,17 +1,18 @@
-# Files in this tree (169 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
+# Files in this tree (170 files plus this manifest and SHA256SUMS.txt; sizes in bytes)
        135  .gitignore
        510  CITATION.cff
       1085  LICENSE
-      8034  README.md
-      5428  VERIFICATION.md
+      8152  README.md
+      5565  VERIFICATION.md
       2868  docs/correction_diagnostic.md
       1254  make_arxiv_bundle.sh
      21322  paper/figures/calibration.pdf
      19358  paper/figures/hte_coverage.pdf
      23814  paper/figures/validation_rates.pdf
      22211  paper/figures/validation_z.pdf
-    103261  paper/main.tex
-     11318  paper/references.bib
+    589218  paper/main.pdf
+    111069  paper/main.tex
+     12431  paper/references.bib
        672  paper/tables/ablation_body.tex
       1249  paper/tables/calibration_body.tex
        196  paper/tables/correction95_body.tex
@@ -148,7 +149,7 @@
        951  run_correction_study.sh
       1304  simulations/check_determinism.py
       4181  simulations/check_jackknife.py
-     15446  simulations/check_prose_numbers.py
+     16136  simulations/check_prose_numbers.py
       8070  simulations/correction_common.py
      15214  simulations/correction_python.py
       9936  simulations/correction_summarize.py
@@ -159,7 +160,7 @@
       3263  simulations/formula.py
       1448  simulations/hc.py
       7726  simulations/hte_designs.py
-     41587  simulations/make_tables.py
+     41629  simulations/make_tables.py
       2016  simulations/run_ablation.py
       2732  simulations/run_bias.py
       7770  simulations/run_example.py

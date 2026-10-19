@@ -55,8 +55,8 @@ cell-specific Monte Carlo standard errors).
 
 - Every number in Section 3 and most of the appendices is generated from `results/` into
   `paper/tables/gamma0_values.tex` and the table bodies. `simulations/check_prose_numbers.py` recomputes every
-  other number quoted in the prose, and the qualitative statements about the simulations, from `results/`, and
-  checks that the quoted text occurs in `paper/main.tex`.
+  other number quoted in the prose, and the qualitative claims listed in that script, from `results/`, and checks
+  that the quoted text occurs in the typeset (uncommented) part of `paper/main.tex`.
 - `simulations/check_determinism.py` (Python) and a repeated run of `r/gamma0_sim.R` (R) confirm
   byte-identical output across fresh processes. All seeds are fixed integers.
 - `run_all.sh` stops on any LaTeX warning; `make_arxiv_bundle.sh` test-compiles the upload bundle with pdflatex

@@ -72,7 +72,8 @@ bash run_all.sh
 
 This runs the certificates, the verification of `D_p`, the examples, the R validation and cross-checks,
 the inference simulations, the jackknife check, the determinism checks, table and figure generation, a
-check of every number and qualitative statement quoted in the prose, the compilation of `paper/main.pdf`
+check of every simulation number quoted in the prose and of the qualitative claims listed in
+`simulations/check_prose_numbers.py`, the compilation of `paper/main.pdf`
 (which fails on any LaTeX warning) and `make_arxiv_bundle.sh`. All seeds are fixed integers.
 
 To rebuild the paper from the stored results only (a few minutes):
