@@ -555,7 +555,7 @@ def jk_tables():
             vals[f"jk:{k}:{m}:cov"] = pct(d["coverage"][m])
             vals[f"jk:{k}:{m}:width"] = fw(d["median_width"][m])
         vals[f"jk:{k}:R2"] = fr2(d["R2_tau"])
-    # rare-value design: leave-one-out fits dropped by the rank-deficiency rule of Section 3.1
+    # rare-value design: leave-one-out fits dropped by the rank-deficiency rule of Section 3
     J = D["rare"]["jackknife"]
     vals["jk:rare:IREG:degfrac"] = pct(J["IREG"]["frac_reps_degenerate_loo"])
     vals["jk:rare:IREG:degcov"] = pct(J["IREG"]["coverage_reps_degenerate_loo"])
@@ -648,7 +648,7 @@ def diagnostic_tables():
         for n in ("500", "2000"):
             c = ex[s_][n]
             vals[f"valid:s{s_}:n{n}:frac"] = f"{100 * (c['sim'] - 1) / (c['predicted'] - 1):.0f}"
-    # scale-versus-shape diagnostic for s = 2: the values quoted in Appendix F (no table body; the paper reports them in prose)
+    # scale-versus-shape diagnostic for s = 2: the values quoted in Appendix F of an earlier version (no table body; the paper reports them in prose)
     st = S["lognormal_s2.0_prop"]["studentized"]
     lv = ["0.80", "0.90", "0.95", "0.98", "0.99"]
     for lab, name in (("IREG_HC1", "IREG, HC1"), ("IREG_HC3", "IREG, HC3"), ("REG_HC1", "REG, HC1")):
@@ -674,7 +674,7 @@ def diagnostic_tables():
     # REG coverage for the population ATE in the large-heterogeneity design
     L = S["large_hte_n500_p5"]["calibration"]
     vals["corr:large_hte_n500_p5:REG_HC1:0.95"] = f"{100 * L['0.95']['REG_HC1']['coverage']:.1f}"
-    # Monte Carlo standard errors of the leverage-one subset coverages (Table 15)
+    # Monte Carlo standard errors of the leverage-one subset coverages (Table 15 of an earlier version)
     mc = []
     for f in ("r_gamma0_rare.json", "r_gamma0_rare_estimatr2.json"):
         for v in load(f).values():

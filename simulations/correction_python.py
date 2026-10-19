@@ -119,7 +119,7 @@ def fit(D, Y, col):
 
 
 def jackknife(D, Y, col, delta_cols=None, Xc=None):
-    """Delete-one jackknife standard error, eq. (12) of the paper, for a batch of OLS fits.
+    """Delete-one jackknife standard error, eq. (13) of the paper, for a batch of OLS fits.
 
     REG: tau = coefficient `col`.  IREG (pass `delta_cols` and the covariates `Xc` centred at the
     full-sample mean, as in D): tau_(-i) = theta_col(-i) + (Xbar_(-i) - Xbar)' delta_(-i), i.e. the

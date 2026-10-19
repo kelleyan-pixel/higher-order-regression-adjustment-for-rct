@@ -3,7 +3,7 @@ the superpopulation component G/n can coexist, and a controlled treatment-effect
 (supplementary; not reported in the current paper).
 
 Intervals: IREG with HC1 plus the plug-in correction, IREG and REG with HC1 and HC3, and IREG and REG
-with the delete-one jackknife of eq. (12) (correction_python.jackknife), all on the same datasets.
+with the delete-one jackknife of eq. (13) (correction_python.jackknife), all on the same datasets.
 
 Both reuse the correction-study engine of correction_python.py (covariates, noise, balanced complete
 randomization, OLS with HC1/HC3, the plug-in term) and change only the treatment-effect slope gamma*
@@ -55,7 +55,7 @@ def summarize(a, tr, n):
           "IREG_HC1c": np.sqrt(a["I_se1"] ** 2 + a["plug"]), "IREG_HC1o": np.sqrt(a["I_se1"] ** 2 + Gn),
           "IREG_HC3c": np.sqrt(a["I_se3"] ** 2 + a["plug"]),
           "REG_HC1": a["R_se1"], "REG_HC3": a["R_se3"],
-          "IREG_JK": a["I_sejk"], "REG_JK": a["R_sejk"]}         # delete-one jackknife, eq. (12)
+          "IREG_JK": a["I_sejk"], "REG_JK": a["R_sejk"]}         # delete-one jackknife, eq. (13)
     out = {"coverage": {}, "mcse": {}, "median_width": {}, "calibration": {f"{L:.2f}": {} for L in LEVELS}}
     for k, s in se.items():
         est, q = (a["R_est"], a["R_q"]) if k.startswith("REG") else (a["I_est"], a["I_q"])

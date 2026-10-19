@@ -1,31 +1,33 @@
 # Verification
 
 What in the paper is proved, what is verified by computation, and how to check it. Numbering follows
-the paper (v1.1.0).
+the paper in `paper/main.tex`.
 
 ## Theory
 
-- **Theorem 2** (second-order MSE difference, remainder `O(n^-3)`) holds under Assumption 1 alone. Its proof
-  (Appendix A) uses the two-sample representation of the completely randomized design (Lemma 6), an exact
-  expansion of the conditional expansion MSE at any treatment fraction (Lemma 7), the comparison between the
-  Bernoulli and conditional expansions (Lemma 8), the CRT-to-Bernoulli reduction (Theorem 9) and the Bernoulli
-  calculation (Theorem 10); Lemma 11 rewrites the result in matrix form.
-- The index algebra of Theorem 10 is certified symbolically by `verification/general_p_symbolic_certificate.py`
+- **Theorem 2** (second-order difference of the capped MSE `E[min{(tau_hat - tau)^2, c^2}]`, remainder
+  `O(n^-3)`) holds under IID sampling, `Var[X]` positive definite and twelve moments of `X` and `Y(w)`; no
+  condition on inverse sample Gram matrices is needed. Its proof (Appendix A) uses the two-sample
+  representation of the completely randomized design (Lemma 6), localization of the capped loss and the clipped
+  error to the cubic Taylor polynomial (Lemma 7), an exact expansion of the Taylor-polynomial MSE at any treatment
+  fraction (Lemma 8), the comparison between Bernoulli and conditional risks (Lemma 9), the CRT-to-Bernoulli
+  reduction (Theorem 10) and the Bernoulli calculation (Theorem 11); Lemma 12 rewrites the result in matrix form.
+- The index algebra of Theorem 11 is certified symbolically by `verification/general_p_symbolic_certificate.py`
   (zero symbolic remainder for general `p`). Before the main computation it asserts that its hand-coded first
   derivatives of the coefficient maps equal the generic formula `D theta[h] = Omega (db - dA theta)` with
   `theta_R = (0, gamma/2, 0)` and `theta_I = (0, 0, 0, gamma)` (57 components). The CRT shift
   `D_CRT = D_Bern + 4G` is checked numerically by `verification/crt_correction_certificate.py`. These are
   computer-assisted checks, not independent proofs.
-- Remark 3 states the leading term of the expansion bias with an `O(n^-2)` remainder; the two leading terms are
-  derived in Appendix A (Lemma 13) and compared with simulated biases in Appendix B. The expansion MSE is not the
-  exact MSE; conditions relating them are not verified.
+- Remark 3 states the leading term of the clipped-error bias with an `O(n^-2)` remainder (Lemma 14); Appendix B
+  compares it with simulated ordinary biases. Transferring Theorem 2 to the ordinary, uncapped MSE requires an
+  additional remainder condition (Appendix A), which is not verified.
 - In the heaviest-tailed designs the full-moment deficiency is dominated by covariate values beyond the
   `1 - 10^-4` quantile; Table 7 recomputes it for truncated lognormal laws (closed-form moments).
 
 ## Numerical verification of the theory
 
 `simulations/run_validation.py` estimates `D_p` in six analytic designs with an exactly centered control
-variate (Table 3); `run_ablation.py` shows that the verification rejects each incorrect variant of the formula
+variate (Table 3), using ordinary, uncapped squared errors; `run_ablation.py` shows that the verification rejects each incorrect variant of the formula
 (Table 4); `run_validation_families.py` covers four covariate families at `p` in {2, 5, 8} (Table 5, Figures 1
 and 2); `run_example.py` compares predicted and simulated MSE ratios along a lognormal family (Table 6, with
 cell-specific Monte Carlo standard errors).
@@ -34,12 +36,12 @@ cell-specific Monte Carlo standard errors).
 
 - Engine: `simulations/correction_python.py`, a batched NumPy implementation of REG and IREG (as fitted by
   `estimatr::lm_robust` and `estimatr::lm_lin`) with HC1/HC3 standard errors, the plug-in
-  `delta' Sigma_X delta / n`, and the delete-one jackknife of eq. (12). The jackknife draws no random numbers,
+  `delta' Sigma_X delta / n`, and the delete-one jackknife of eq. (13). The jackknife draws no random numbers,
   so adding it left every previously stored output of `results/hte_battery.json` unchanged (checked value by
   value when it was added).
 - The jackknife uses the exact deletion formula for least squares; for IREG the leave-one-out fit is recentred
   at the leave-one-out covariate mean. A leave-one-out fit whose design is rank deficient (leverage one) is
-  omitted, and eq. (12) is applied to the remaining estimates. `simulations/check_jackknife.py` compares the
+  omitted, and eq. (13) is applied to the remaining estimates. `simulations/check_jackknife.py` compares the
   batched values with brute-force refitting on the remaining `n - 1` units, including datasets with omitted
   fits (relative gap about `10^-14`, `results/jackknife_check.json`).
 - `r/validate_estimatr.R` confirms that the R engine reproduces the `lm_robust()`/`lm_lin()` formula interfaces,
@@ -51,7 +53,7 @@ cell-specific Monte Carlo standard errors).
 
 ## Consistency and determinism
 
-- Every number in Section 3, the Discussion and most of the appendices is generated from `results/` into
+- Every number in Section 3 and most of the appendices is generated from `results/` into
   `paper/tables/gamma0_values.tex` and the table bodies. `simulations/check_prose_numbers.py` recomputes every
   other number quoted in the prose, and the qualitative statements about the simulations, from `results/`, and
   checks that the quoted text occurs in `paper/main.tex`.
@@ -67,10 +69,7 @@ replications with both point estimates available, coverage counts unavailable in
 and median width uses available intervals. The manuscript also reports the sensitivity to declaring
 the jackknife interval unavailable whenever any deletion is undefined.
 
-The current source has not yet had a verified clean compile after the targeted revisions; a Windows
-access-denied error prevented the editor compiler from starting. The stale compiled PDF was removed.
-
 ## Not verified
 
 Cross-platform reproducibility (tested on Linux x86_64 only); the sharpness of the moment condition; the
-relation between the expansion MSE and trimmed exact moments.
+remainder condition that transfers Theorem 2 from capped to ordinary MSE.
